@@ -51,6 +51,10 @@
       <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\RimWorld\RimWorldWin64_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="UnityEngine.IMGUIModule">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\RimWorld\RimWorldWin64_Data\Managed\UnityEngine.IMGUIModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="UnityEngine.TextRenderingModule">
       <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\RimWorld\RimWorldWin64_Data\Managed\UnityEngine.TextRenderingModule.dll</HintPath>
       <Private>False</Private>
@@ -59,9 +63,14 @@
   <ItemGroup>
     <Compile Include="Debug.cs" />
     <Compile Include="Dialog_WealthBreakdown.cs" />
-    <Compile Include="Patch_MainTabWindow_History.cs" />
+    <Compile Include="Patch_PlaySettings.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="VisibleWealthMod.cs" />
+    <Compile Include="WealthCategory.cs" />
+    <Compile Include="WealthNode.cs" />
+    <Compile Include="WealthNode_Item.cs" />
+    <Compile Include="WealthNode_WealthCategory.cs" />
+    <Compile Include="WealthNode_ResourceCategory.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
