@@ -2,5 +2,7 @@
 <LanguageData>
 	<VisibleWealth_WealthBreakdown>Wealth breakdown</VisibleWealth_WealthBreakdown>
 	<VisibleWealth_TotalWealth>Total wealth: ${0}</VisibleWealth_TotalWealth>
-	<VisibleWealth_ItemsWealth>Items wealth</VisibleWealth_ItemsWealth>
+	<VisibleWealth_WealthItems>Items wealth</VisibleWealth_WealthItems>
+	<VisibleWealth_WealthBuildings>Buildings wealth</VisibleWealth_WealthBuildings>
+	<VisibleWealth_WealthPawns>Pawns wealth</VisibleWealth_WealthPawns>
 </LanguageData>

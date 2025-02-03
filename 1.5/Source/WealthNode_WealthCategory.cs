@@ -1,26 +1,36 @@
 ﻿using RimWorld;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
+using System.Security.Cryptography;
 using Verse;
 
 namespace VisibleWealth
 {
     public class WealthNode_WealthCategory : WealthNode
     {
-        private List<WealthNode_ResourceCategory> subNodes;
+        private static HashSet<WealthCategory> openCategories = new HashSet<WealthCategory>();
+
+        private readonly WealthCategory category;
+        private readonly List<WealthNode> subNodes;
 
         public WealthNode_WealthCategory(Map map, int level, WealthCategory category) : base(map, level)
         {
+            this.category = category;
             switch (category)
             {
                 case WealthCategory.Items:
-                    subNodes = ThingCategoryDefOf.Root.childCategories.Select(d => new WealthNode_ResourceCategory(map, level + 1, d)).ToList();
+                    subNodes = ThingCategoryDefOf.Root.childCategories.Select(d => new WealthNode_ResourceCategory(map, level + 1, d) as WealthNode).ToList();
+                    break;
+                case WealthCategory.Buildings:
+                    subNodes = new List<WealthNode>();
+                    subNodes.AddRange(DefDatabase<DesignationCategoryDef>.AllDefsListForReading.Select(d => new WealthNode_BuildingCategory(map, level + 1, d) as WealthNode));
+                    subNodes.AddRange(DefDatabase<ThingDef>.AllDefsListForReading.Where(d => d.designationCategory == null && ThingRequestGroup.BuildingArtificial.Includes(d)).Select(d => new WealthNode_Building(map, level + 1, d)));
                     break;
             }
+            Open = openCategories.Contains(category);
         }
 
-        public override string Text => "VisibleWealth_ItemsWealth".Translate();
+        public override string Text => category.Label();
 
         public override IEnumerable<WealthNode> Children => subNodes;
 
@@ -28,6 +38,14 @@ namespace VisibleWealth
 
         public override float Value => subNodes.Sum(n => n.Value);
 
-        public override Texture2D Icon => null;
+        public override void OnOpen()
+        {
+            openCategories.Add(category);
+        }
+
+        public override void OnClose()
+        {
+            openCategories.Remove(category);
+        }
     }
 }

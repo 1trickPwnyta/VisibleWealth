@@ -68,6 +68,8 @@
     <Compile Include="VisibleWealthMod.cs" />
     <Compile Include="WealthCategory.cs" />
     <Compile Include="WealthNode.cs" />
+    <Compile Include="WealthNode_Building.cs" />
+    <Compile Include="WealthNode_BuildingCategory.cs" />
     <Compile Include="WealthNode_Item.cs" />
     <Compile Include="WealthNode_WealthCategory.cs" />
     <Compile Include="WealthNode_ResourceCategory.cs" />

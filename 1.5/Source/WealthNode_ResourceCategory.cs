@@ -1,14 +1,15 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
 using Verse;
 
 namespace VisibleWealth
 {
     public class WealthNode_ResourceCategory : WealthNode
     {
-        private ThingCategoryDef def;
-        private List<WealthNode> subNodes;
+        private static HashSet<ThingCategoryDef> openCategories = new HashSet<ThingCategoryDef>();
+
+        private readonly ThingCategoryDef def;
+        private readonly List<WealthNode> subNodes;
 
         public WealthNode_ResourceCategory(Map map, int level, ThingCategoryDef def) : base(map, level)
         {
@@ -16,6 +17,7 @@ namespace VisibleWealth
             subNodes = new List<WealthNode>();
             subNodes.AddRange(def.childCategories.Select(d => new WealthNode_ResourceCategory(map, level + 1, d)));
             subNodes.AddRange(def.childThingDefs.Select(d => new WealthNode_Item(map, level + 1, d)));
+            Open = openCategories.Contains(def);
         }
 
         public override string Text => def.LabelCap;
@@ -26,6 +28,14 @@ namespace VisibleWealth
 
         public override float Value => subNodes.Sum(n => n.Value);
 
-        public override Texture2D Icon => null;
+        public override void OnOpen()
+        {
+            openCategories.Add(def);
+        }
+
+        public override void OnClose()
+        {
+            openCategories.Remove(def);
+        }
     }
 }

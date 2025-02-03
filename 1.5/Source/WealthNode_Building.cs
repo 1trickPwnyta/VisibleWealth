@@ -1,5 +1,4 @@
 ﻿using RimWorld;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -7,20 +6,18 @@ using Verse;
 
 namespace VisibleWealth
 {
-    public class WealthNode_Item : WealthNode
+    public class WealthNode_Building : WealthNode
     {
         private readonly ThingDef def;
         private readonly int quantity;
         private readonly float value;
 
-        public WealthNode_Item(Map map, int level, ThingDef def) : base(map, level)
+        public WealthNode_Building(Map map, int level, ThingDef def) : base(map, level)
         {
             this.def = def;
-            List<Thing> list = new List<Thing>();
-            ThingOwnerUtility.GetAllThingsRecursively(map, ThingRequest.ForDef(def), list, false, new Predicate<IThingHolder>(WealthWatcher.WealthItemsFilter));
-            list.RemoveAll(t => !t.SpawnedOrAnyParentSpawned || t.PositionHeld.Fogged(map) || !ThingRequestGroup.HaulableEver.Includes(t.def));
-            quantity = list.Sum(t => t.stackCount);
-            value = list.Sum(t => t.MarketValue * t.stackCount);
+            List<Building> list = map.listerThings.ThingsOfDef(def).Select(t => t as Building).Where(b => b.Faction == Faction.OfPlayer).ToList();
+            quantity = list.Count;
+            value = list.Sum(t => t.GetStatValue(StatDefOf.MarketValueIgnoreHp));
         }
 
         public override string Text => def.LabelCap + " x" + quantity;
