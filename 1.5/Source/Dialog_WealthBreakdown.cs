@@ -26,6 +26,7 @@ namespace VisibleWealth
             doCloseX = true;
             closeOnClickedOutside = true;
             forcePause = true;
+            absorbInputAroundWindow = true;
 
             WealthNode_Floor.TerrainCache.Clear();
 
