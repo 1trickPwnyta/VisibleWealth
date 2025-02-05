@@ -64,13 +64,21 @@
     <Compile Include="Debug.cs" />
     <Compile Include="Dialog_WealthBreakdown.cs" />
     <Compile Include="Patch_PlaySettings.cs" />
+    <Compile Include="PawnCategory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SortBy.cs" />
     <Compile Include="VisibleWealthMod.cs" />
     <Compile Include="WealthCategory.cs" />
     <Compile Include="WealthNode.cs" />
     <Compile Include="WealthNode_Building.cs" />
     <Compile Include="WealthNode_BuildingCategory.cs" />
+    <Compile Include="WealthNode_Floor.cs" />
     <Compile Include="WealthNode_Item.cs" />
+    <Compile Include="WealthNode_Pawn.cs" />
+    <Compile Include="WealthNode_PawnCategory.cs" />
+    <Compile Include="WealthNode_PawnRace.cs" />
+    <Compile Include="WealthNode_PawnRaceGhoul.cs" />
+    <Compile Include="WealthNode_PocketMap.cs" />
     <Compile Include="WealthNode_WealthCategory.cs" />
     <Compile Include="WealthNode_ResourceCategory.cs" />
   </ItemGroup>

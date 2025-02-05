@@ -16,11 +16,15 @@ namespace VisibleWealth
         public WealthNode_Item(Map map, int level, ThingDef def) : base(map, level)
         {
             this.def = def;
-            List<Thing> list = new List<Thing>();
-            ThingOwnerUtility.GetAllThingsRecursively(map, ThingRequest.ForDef(def), list, false, new Predicate<IThingHolder>(WealthWatcher.WealthItemsFilter));
-            list.RemoveAll(t => !t.SpawnedOrAnyParentSpawned || t.PositionHeld.Fogged(map) || !ThingRequestGroup.HaulableEver.Includes(t.def));
-            quantity = list.Sum(t => t.stackCount);
-            value = list.Sum(t => t.MarketValue * t.stackCount);
+            List<Thing> things = new List<Thing>();
+            ThingOwnerUtility.GetAllThingsRecursively(map, ThingRequest.ForDef(def), things, false, new Predicate<IThingHolder>(WealthWatcher.WealthItemsFilter));
+            List<Thing> minifiedThings = new List<Thing>();
+            ThingOwnerUtility.GetAllThingsRecursively(map, ThingRequest.ForGroup(ThingRequestGroup.MinifiedThing), minifiedThings, false, new Predicate<IThingHolder>(WealthWatcher.WealthItemsFilter));
+            minifiedThings.RemoveAll(t => t.GetInnerIfMinified().def != def);
+            things.AddRange(minifiedThings);
+            things.RemoveAll(t => !t.SpawnedOrAnyParentSpawned || t.PositionHeld.Fogged(map) || !ThingRequestGroup.HaulableEver.Includes(t.def));
+            quantity = things.Sum(t => t.stackCount);
+            value = things.Sum(t => t.MarketValue * t.stackCount);
         }
 
         public override string Text => def.LabelCap + " x" + quantity;
@@ -31,7 +35,11 @@ namespace VisibleWealth
 
         public override float Value => value;
 
-        public override Texture2D Icon => def.uiIcon;
+        public override float DrawIcon(Rect rect)
+        {
+            Widgets.ThingIcon(rect, def);
+            return IconSize.x + 2f;
+        }
 
         public override Def InfoDef => def;
     }

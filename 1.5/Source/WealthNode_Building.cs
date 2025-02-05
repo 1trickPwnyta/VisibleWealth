@@ -15,7 +15,7 @@ namespace VisibleWealth
         public WealthNode_Building(Map map, int level, ThingDef def) : base(map, level)
         {
             this.def = def;
-            List<Building> list = map.listerThings.ThingsOfDef(def).Select(t => t as Building).Where(b => b.Faction == Faction.OfPlayer).ToList();
+            List<Thing> list = map.listerThings.ThingsOfDef(def).Where(b => b.Faction == Faction.OfPlayer).ToList();
             quantity = list.Count;
             value = list.Sum(t => t.GetStatValue(StatDefOf.MarketValueIgnoreHp));
         }
@@ -28,7 +28,11 @@ namespace VisibleWealth
 
         public override float Value => value;
 
-        public override Texture2D Icon => def.uiIcon;
+        public override float DrawIcon(Rect rect)
+        {
+            Widgets.ThingIcon(rect, def);
+            return IconSize.x + 2f;
+        }
 
         public override Def InfoDef => def;
     }

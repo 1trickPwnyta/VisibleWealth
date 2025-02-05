@@ -5,4 +5,15 @@
 	<VisibleWealth_WealthItems>Items wealth</VisibleWealth_WealthItems>
 	<VisibleWealth_WealthBuildings>Buildings wealth</VisibleWealth_WealthBuildings>
 	<VisibleWealth_WealthPawns>Pawns wealth</VisibleWealth_WealthPawns>
+	<VisibleWealth_WealthPocketMaps>Pocket maps</VisibleWealth_WealthPocketMaps>
+	<VisibleWealth_Humans>Human</VisibleWealth_Humans>
+	<VisibleWealth_Animals>Animal</VisibleWealth_Animals>
+	<VisibleWealth_Mechs>Mech</VisibleWealth_Mechs>
+	<VisibleWealth_Mutants>Mutant</VisibleWealth_Mutants>
+	<VisibleWealth_Ghouls>Ghoul</VisibleWealth_Ghouls>
+	<VisibleWealth_SortBy>Sort by {0}</VisibleWealth_SortBy>
+	<VisibleWealth_SortByName>name</VisibleWealth_SortByName>
+	<VisibleWealth_SortByValue>value</VisibleWealth_SortByValue>
+	<VisibleWealth_SortDirectionAscending>Sort ascending</VisibleWealth_SortDirectionAscending>
+	<VisibleWealth_SortDirectionDescending>Sort descending</VisibleWealth_SortDirectionDescending>
 </LanguageData>

@@ -6,7 +6,7 @@ namespace VisibleWealth
 {
     public class WealthNode_ResourceCategory : WealthNode
     {
-        private static HashSet<ThingCategoryDef> openCategories = new HashSet<ThingCategoryDef>();
+        private static readonly HashSet<ThingCategoryDef> openCategories = new HashSet<ThingCategoryDef>();
 
         private readonly ThingCategoryDef def;
         private readonly List<WealthNode> subNodes;

@@ -1,4 +1,5 @@
-﻿using RimWorld;
+﻿using HarmonyLib;
+using RimWorld;
 using System.Collections.Generic;
 using System.Linq;
 using Verse;
@@ -7,15 +8,20 @@ namespace VisibleWealth
 {
     public class WealthNode_BuildingCategory : WealthNode
     {
-        private static HashSet<DesignationCategoryDef> openCategories = new HashSet<DesignationCategoryDef>();
+        private static readonly HashSet<DesignationCategoryDef> openCategories = new HashSet<DesignationCategoryDef>();
 
         private readonly DesignationCategoryDef def;
-        private readonly List<WealthNode_Building> subNodes;
+        private readonly List<WealthNode> subNodes;
 
         public WealthNode_BuildingCategory(Map map, int level, DesignationCategoryDef def) : base(map, level)
         {
             this.def = def;
-            subNodes = DefDatabase<ThingDef>.AllDefsListForReading.Where(d => d.designationCategory == def && ThingRequestGroup.BuildingArtificial.Includes(d)).Select(d => new WealthNode_Building(map, level + 1, d)).ToList();
+            subNodes = new List<WealthNode>();
+            subNodes.AddRange(DefDatabase<ThingDef>.AllDefsListForReading.Where(d => d.designationCategory == def && ThingRequestGroup.BuildingArtificial.Includes(d)).Select(d => new WealthNode_Building(map, level + 1, d)));
+            if (def == DesignationCategoryDefOf.Floors)
+            {
+                subNodes.AddRange(DefDatabase<TerrainDef>.AllDefsListForReading.Where(d => ((float[])typeof(WealthWatcher).Field("cachedTerrainMarketValue").GetValue(map.wealthWatcher))[d.index] > 0f).Select(d => new WealthNode_Floor(map, level + 1, d)));
+            }
             Open = openCategories.Contains(def);
         }
 

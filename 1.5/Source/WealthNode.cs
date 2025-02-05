@@ -1,4 +1,5 @@
-﻿using RimWorld;
+﻿using HarmonyLib;
+using RimWorld;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -9,11 +10,13 @@ namespace VisibleWealth
 {
     public abstract class WealthNode
     {
-        public static Vector2 Size = new Vector2(600f, 30f);
-        public static Vector2 IconSize = new Vector2(25f, 25f);
-        public static float VerticalSpacing = 2f;
-        public static Color Color = new Color(0.15f, 0.15f, 0.15f);
-        public static float Indent = 20f;
+        public static readonly Vector2 Size = new Vector2(600f, 30f);
+        public static readonly Vector2 IconSize = new Vector2(25f, 25f);
+        public static readonly float VerticalSpacing = 2f;
+        public static readonly Color Color = new Color(0.15f, 0.15f, 0.15f);
+        public static readonly float Indent = 20f;
+        public static SortBy SortBy = SortBy.Value;
+        public static bool SortAscending = false;
 
         private bool open;
         private readonly int level;
@@ -45,6 +48,26 @@ namespace VisibleWealth
             this.level = level;
         }
 
+        public IEnumerable<WealthNode> LeafNodes
+        {
+            get 
+            {
+                List<WealthNode> leafNodes = new List<WealthNode>();
+                if (Children.Count() == 0)
+                {
+                    leafNodes.Add(this);
+                }
+                else
+                {
+                    foreach (WealthNode node in Children.Where(n => n.Visible))
+                    {
+                        leafNodes.AddRange(node.LeafNodes);
+                    }
+                }
+                return leafNodes;
+            }
+        }
+
         public bool ThisOrAnyChildMatchesSearch()
         {
             if (Visible && Dialog_WealthBreakdown.Search.filter.Matches(Text))
@@ -65,17 +88,21 @@ namespace VisibleWealth
 
         public abstract IEnumerable<WealthNode> Children { get; }
 
+        public virtual bool SortChildren => true;
+
         public abstract bool Visible { get; }
 
         public abstract float Value { get; }
 
-        public virtual Texture2D Icon { get; }
-
         public virtual Def InfoDef { get; }
+
+        public virtual Thing InfoThing { get; }
 
         public virtual void OnOpen() { }
 
         public virtual void OnClose() { }
+
+        public virtual float DrawIcon(Rect rect) => 0f;
 
         public void Draw(ref float y)
         {
@@ -96,25 +123,20 @@ namespace VisibleWealth
                     x += IconSize.x + 2f;
                 }
 
-                Texture2D icon = Icon;
-                if (icon != null)
-                {
-                    Rect iconRect = new Rect(rect.x + x, rect.y + (rect.height - IconSize.y) / 2, IconSize.x, IconSize.y);
-                    GUI.DrawTexture(iconRect, icon);
-                    x += IconSize.x + 2f;
-                }
+                Rect iconRect = new Rect(rect.x + x, rect.y + (rect.height - IconSize.y) / 2, IconSize.x, IconSize.y);
+                x += DrawIcon(iconRect);
 
                 Rect labelRect = new Rect(rect.x + x, rect.y, rect.width - x, rect.height);
                 Verse.Text.Anchor = TextAnchor.MiddleLeft;
                 Widgets.Label(labelRect, Text + " (" + ("$" + Value.ToString("F0")).Colorize(ColoredText.CurrencyColor) + ")");
                 Verse.Text.Anchor = TextAnchor.UpperLeft;
 
-                if (InfoDef != null)
+                if (InfoDef != null || InfoThing != null)
                 {
                     Rect infoRect = new Rect(rect.xMax - IconSize.x, rect.y + (rect.height - IconSize.y) / 2, IconSize.x, IconSize.y);
                     if (Widgets.ButtonImage(infoRect, TexButton.Info))
                     {
-                        Find.WindowStack.Add(new Dialog_InfoCard(InfoDef));
+                        Find.WindowStack.Add(InfoThing != null ? new Dialog_InfoCard(InfoThing) : new Dialog_InfoCard(InfoDef));
                     }
                 }
 
@@ -122,7 +144,7 @@ namespace VisibleWealth
 
                 if (Open || Dialog_WealthBreakdown.Search.filter.Active)
                 {
-                    foreach (WealthNode node in Children)
+                    foreach (WealthNode node in SortChildren ? SortBy.Sorted(Children, SortAscending) : Children)
                     {
                         node.Draw(ref y);
                     }
