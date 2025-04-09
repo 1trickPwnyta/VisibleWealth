@@ -20,7 +20,7 @@ namespace VisibleWealth
 
         public override Vector2 InitialSize => new Vector2(WealthNode.Size.x + 20f + Window.StandardMargin * 2, 600f);
 
-        public Dialog_WealthBreakdown() : base() 
+        public Dialog_WealthBreakdown()
         {
             doCloseButton = true;
             doCloseX = true;
@@ -31,6 +31,7 @@ namespace VisibleWealth
             WealthNode_Floor.TerrainCache.Clear();
 
             map = Find.CurrentMap;
+            map.wealthWatcher.ForceRecount();
             itemsNode = new WealthNode_WealthCategory(map, 0, WealthCategory.Items);
             buildingsNode = new WealthNode_WealthCategory(map, 0, WealthCategory.Buildings);
             pawnsNode = new WealthNode_WealthCategory(map, 0, WealthCategory.Pawns);

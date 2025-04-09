@@ -3,11 +3,12 @@
 	<name>Visible Wealth</name>
 	<author>1trickPwnyta</author>
 	<packageId>visiblewealth.1trickPwnyta</packageId>
+	<modVersion>1.0.0</modVersion>
 	<supportedVersions>
 		<li>1.5</li>
 	</supportedVersions>
 	<description>
-
+Did you know that your thrumbofur stockpile makes up a massive portion of your colony's wealth? Did you know that your snowhare corpse is worth $18? Well now you can see a detailed breakdown of your colony's wealth, including all your items, buildings, and pawns. I don't know what else to say.
 
 === Credits ===
 Mod icon: twitter.com/mouse_draws
