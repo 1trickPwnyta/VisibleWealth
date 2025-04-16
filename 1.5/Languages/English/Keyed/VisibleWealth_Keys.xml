@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <LanguageData>
 	<VisibleWealth_WealthBreakdown>Wealth breakdown</VisibleWealth_WealthBreakdown>
+	<VisibleWealth_Calculating>Calculating</VisibleWealth_Calculating>
 	<VisibleWealth_TotalWealth>Total wealth: ${0}</VisibleWealth_TotalWealth>
 	<VisibleWealth_WealthItems>Items wealth</VisibleWealth_WealthItems>
 	<VisibleWealth_WealthBuildings>Buildings wealth</VisibleWealth_WealthBuildings>
@@ -16,4 +17,7 @@
 	<VisibleWealth_SortByValue>value</VisibleWealth_SortByValue>
 	<VisibleWealth_SortDirectionAscending>Sort ascending</VisibleWealth_SortDirectionAscending>
 	<VisibleWealth_SortDirectionDescending>Sort descending</VisibleWealth_SortDirectionDescending>
+	<VisibleWealth_PercentOfTotal>Show percent of total wealth</VisibleWealth_PercentOfTotal>
+	<VisibleWealth_PercentOfCategory>Show percent of parent category</VisibleWealth_PercentOfCategory>
+	<VisibleWealth_PercentOfNone>Do not show percentages</VisibleWealth_PercentOfNone>
 </LanguageData>

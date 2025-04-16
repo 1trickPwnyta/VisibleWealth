@@ -6,11 +6,17 @@ using Verse.Sound;
 
 namespace VisibleWealth
 {
+    [StaticConstructorOnStartup]
     public class Dialog_WealthBreakdown : Window
     {
         private static Vector2 scrollPosition;
         private static float y;
         public static QuickSearchWidget Search = new QuickSearchWidget();
+
+        public static void Open()
+        {
+            LongEventHandler.QueueLongEvent(() => Find.WindowStack.Add(new Dialog_WealthBreakdown()), "VisibleWealth_Calculating", false, null);
+        }
 
         private readonly Map map;
         private readonly WealthNode itemsNode;
@@ -20,7 +26,7 @@ namespace VisibleWealth
 
         public override Vector2 InitialSize => new Vector2(WealthNode.Size.x + 20f + Window.StandardMargin * 2, 600f);
 
-        public Dialog_WealthBreakdown()
+        private Dialog_WealthBreakdown()
         {
             doCloseButton = true;
             doCloseX = true;
@@ -32,12 +38,22 @@ namespace VisibleWealth
 
             map = Find.CurrentMap;
             map.wealthWatcher.ForceRecount();
-            itemsNode = new WealthNode_WealthCategory(map, 0, WealthCategory.Items);
-            buildingsNode = new WealthNode_WealthCategory(map, 0, WealthCategory.Buildings);
-            pawnsNode = new WealthNode_WealthCategory(map, 0, WealthCategory.Pawns);
-            pocketMapsNode = new WealthNode_WealthCategory(map, 0, WealthCategory.PocketMaps);
+            itemsNode = new WealthNode_WealthCategory(null, map, 0, WealthCategory.Items);
+            buildingsNode = new WealthNode_WealthCategory(null, map, 0, WealthCategory.Buildings);
+            pawnsNode = new WealthNode_WealthCategory(null, map, 0, WealthCategory.Pawns);
+            pocketMapsNode = new WealthNode_WealthCategory(null, map, 0, WealthCategory.PocketMaps);
 
             Search.Reset();
+        }
+
+        public override void PostOpen()
+        {
+            SoundDefOf.TabOpen.PlayOneShot(null);
+        }
+
+        public override void PostClose()
+        {
+            VisibleWealthMod.Settings.Write();
         }
 
         public override void DoWindowContents(Rect inRect)
@@ -66,27 +82,43 @@ namespace VisibleWealth
             Widgets.EndScrollView();
 
             Rect optionsRect = new Rect(inRect.x, inRect.yMax - Window.CloseButSize.y - 10f - 24f, inRect.width, 24f);
+
             Rect sortByRect = new Rect(optionsRect.x, optionsRect.y, 24f, optionsRect.height);
-            if (Widgets.ButtonImage(sortByRect, WealthNode.SortBy.GetIcon(), true, "VisibleWealth_SortBy".Translate(WealthNode.SortBy.GetLabel())))
+            if (Widgets.ButtonImage(sortByRect, VisibleWealthSettings.SortBy.GetIcon(), true, "VisibleWealth_SortBy".Translate(VisibleWealthSettings.SortBy.GetLabel())))
             {
                 List<FloatMenuOption> options = new List<FloatMenuOption>();
                 foreach (SortBy sortBy in typeof(SortBy).GetEnumValues())
                 {
                     options.Add(new FloatMenuOption("VisibleWealth_SortBy".Translate(sortBy.GetLabel()), () =>
                     {
-                        WealthNode.SortBy = sortBy;
-                    }));
+                        VisibleWealthSettings.SortBy = sortBy;
+                    }, sortBy.GetIcon(), Color.white));
                 }
                 Find.WindowStack.Add(new FloatMenu(options));
             }
+
             Rect sortDirectionRect = new Rect(optionsRect.x + 24f, optionsRect.y, 24f, optionsRect.height);
-            if (Widgets.ButtonImage(sortDirectionRect, SortByUtility.SortDirectionIcon, true, WealthNode.SortAscending ? "VisibleWealth_SortDirectionAscending".Translate() : "VisibleWealth_SortDirectionDescending".Translate()))
+            if (Widgets.ButtonImage(sortDirectionRect, SortByUtility.SortDirectionIcon, true, VisibleWealthSettings.SortAscending ? "VisibleWealth_SortDirectionAscending".Translate() : "VisibleWealth_SortDirectionDescending".Translate()))
             {
-                WealthNode.SortAscending = !WealthNode.SortAscending;
-                (WealthNode.SortAscending ? SoundDefOf.Tick_High : SoundDefOf.Tick_Low).PlayOneShot(null);
+                VisibleWealthSettings.SortAscending = !VisibleWealthSettings.SortAscending;
+                (VisibleWealthSettings.SortAscending ? SoundDefOf.Tick_High : SoundDefOf.Tick_Low).PlayOneShot(null);
             }
             Rect sortDirectionCheckRect = new Rect(sortDirectionRect.x + sortDirectionRect.width / 2, sortDirectionRect.y, sortDirectionRect.width / 2, sortDirectionRect.height / 2);
-            GUI.DrawTexture(sortDirectionCheckRect, WealthNode.SortAscending ? Widgets.CheckboxOnTex : Widgets.CheckboxOffTex);
+            GUI.DrawTexture(sortDirectionCheckRect, VisibleWealthSettings.SortAscending ? Widgets.CheckboxOnTex : Widgets.CheckboxOffTex);
+
+            Rect percentOfTotalRect = new Rect(optionsRect.x + 24f + 24f, optionsRect.y, 24f, optionsRect.height);
+            if (Widgets.ButtonImage(percentOfTotalRect, VisibleWealthSettings.PercentOf.GetIcon(), true, VisibleWealthSettings.PercentOf.GetLabel()))
+            {
+                List<FloatMenuOption> options = new List<FloatMenuOption>();
+                foreach (PercentOf percentOf in typeof(PercentOf).GetEnumValues())
+                {
+                    options.Add(new FloatMenuOption(percentOf.GetLabel(), () =>
+                    {
+                        VisibleWealthSettings.PercentOf = percentOf;
+                    }, percentOf.GetIcon(), Color.white));
+                }
+                Find.WindowStack.Add(new FloatMenu(options));
+            }
         }
     }
 }

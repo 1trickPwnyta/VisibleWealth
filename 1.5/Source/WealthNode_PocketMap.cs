@@ -11,14 +11,14 @@ namespace VisibleWealth
         private readonly Map pocketMap;
         private readonly List<WealthNode> subNodes;
 
-        public WealthNode_PocketMap(Map map, int level, Map pocketMap) : base(map, level)
+        public WealthNode_PocketMap(WealthNode parent, Map map, int level, Map pocketMap) : base(parent, map, level)
         {
             this.pocketMap = pocketMap;
             subNodes = new List<WealthNode>()
             {
-                new WealthNode_WealthCategory(pocketMap, level + 1, WealthCategory.Items),
-                new WealthNode_WealthCategory(pocketMap, level + 1, WealthCategory.Buildings),
-                new WealthNode_WealthCategory(pocketMap, level + 1, WealthCategory.Pawns)
+                new WealthNode_WealthCategory(this, pocketMap, level + 1, WealthCategory.Items),
+                new WealthNode_WealthCategory(this, pocketMap, level + 1, WealthCategory.Buildings),
+                new WealthNode_WealthCategory(this, pocketMap, level + 1, WealthCategory.Pawns)
             };
             Open = openMaps.Contains(pocketMap);
         }

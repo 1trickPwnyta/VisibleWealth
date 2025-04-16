@@ -1,5 +1,4 @@
-﻿using HarmonyLib;
-using RimWorld;
+﻿using RimWorld;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -15,12 +14,11 @@ namespace VisibleWealth
         public static readonly float VerticalSpacing = 2f;
         public static readonly Color Color = new Color(0.15f, 0.15f, 0.15f);
         public static readonly float Indent = 20f;
-        public static SortBy SortBy = SortBy.Value;
-        public static bool SortAscending = false;
 
         private bool open;
         private readonly int level;
-        protected readonly Map Map;
+        public readonly Map Map;
+        public readonly WealthNode parent;
 
         protected bool Open
         {
@@ -42,8 +40,9 @@ namespace VisibleWealth
             }
         }
 
-        public WealthNode(Map map, int level)
+        public WealthNode(WealthNode parent, Map map, int level)
         {
+            this.parent = parent;
             Map = map;
             this.level = level;
         }
@@ -128,7 +127,7 @@ namespace VisibleWealth
 
                 Rect labelRect = new Rect(rect.x + x, rect.y, rect.width - x, rect.height);
                 Verse.Text.Anchor = TextAnchor.MiddleLeft;
-                Widgets.Label(labelRect, Text + " (" + ("$" + Value.ToString("F0")).Colorize(ColoredText.CurrencyColor) + ")");
+                Widgets.Label(labelRect, Text + " " + ("$" + Value.ToString("F0")).Colorize(ColoredText.CurrencyColor) + " " + VisibleWealthSettings.PercentOf.Text(this).Colorize(ColoredText.SubtleGrayColor));
                 Verse.Text.Anchor = TextAnchor.UpperLeft;
 
                 if (InfoDef != null || InfoThing != null)
@@ -144,7 +143,7 @@ namespace VisibleWealth
 
                 if (Open || Dialog_WealthBreakdown.Search.filter.Active)
                 {
-                    foreach (WealthNode node in SortChildren ? SortBy.Sorted(Children, SortAscending) : Children)
+                    foreach (WealthNode node in SortChildren ? VisibleWealthSettings.SortBy.Sorted(Children, VisibleWealthSettings.SortAscending) : Children)
                     {
                         node.Draw(ref y);
                     }

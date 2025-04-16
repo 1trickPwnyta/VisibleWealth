@@ -12,20 +12,20 @@ namespace VisibleWealth
         private readonly PawnCategory category;
         private readonly List<WealthNode> subNodes;
 
-        public WealthNode_PawnCategory(Map map, int level, PawnCategory category) : base(map, level)
+        public WealthNode_PawnCategory(WealthNode parent, Map map, int level, PawnCategory category) : base(parent, map, level)
         {
             this.category = category;
             subNodes = new List<WealthNode>();
             if (category == PawnCategory.Human)
             {
-                subNodes.AddRange(map.mapPawns.PawnsInFaction(Faction.OfPlayer).Where(p => category.Matches(p) && !p.IsQuestLodger()).Select(p => new WealthNode_Pawn(map, level + 1, p)));
+                subNodes.AddRange(map.mapPawns.PawnsInFaction(Faction.OfPlayer).Where(p => category.Matches(p) && !p.IsQuestLodger()).Select(p => new WealthNode_Pawn(this, map, level + 1, p)));
             }
             else
             {
-                subNodes.AddRange(DefDatabase<PawnKindDef>.AllDefsListForReading.Select(d => d.race).Distinct().Select(r => new WealthNode_PawnRace(map, level + 1, category, r)));
+                subNodes.AddRange(DefDatabase<PawnKindDef>.AllDefsListForReading.Select(d => d.race).Distinct().Select(r => new WealthNode_PawnRace(this, map, level + 1, category, r)));
                 if (category == PawnCategory.Mutant)
                 {
-                    subNodes.Add(new WealthNode_PawnRaceGhoul(map, level + 1));
+                    subNodes.Add(new WealthNode_PawnRaceGhoul(this, map, level + 1));
                 }
             }
             Open = openCategories.Contains(category);

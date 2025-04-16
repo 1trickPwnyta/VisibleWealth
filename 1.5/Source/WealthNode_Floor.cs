@@ -24,7 +24,7 @@ namespace VisibleWealth
         private readonly int quantity;
         private readonly float value;
 
-        public WealthNode_Floor(Map map, int level, TerrainDef def) : base(map, level)
+        public WealthNode_Floor(WealthNode parent, Map map, int level, TerrainDef def) : base(parent, map, level)
         {
             this.def = def;
             quantity = GetTerrainCache(map).Where(d => d == def).Count();

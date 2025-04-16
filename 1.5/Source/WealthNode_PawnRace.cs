@@ -12,11 +12,11 @@ namespace VisibleWealth
         private readonly ThingDef def;
         private readonly List<WealthNode> subNodes;
 
-        public WealthNode_PawnRace(Map map, int level, PawnCategory category, ThingDef def) : base(map, level)
+        public WealthNode_PawnRace(WealthNode parent, Map map, int level, PawnCategory category, ThingDef def) : base(parent, map, level)
         {
             this.def = def;
             subNodes = new List<WealthNode>();
-            subNodes.AddRange(map.mapPawns.PawnsInFaction(Faction.OfPlayer).Where(p => p.def == def && category.Matches(p) && !p.IsGhoul && !p.IsQuestLodger()).Select(p => new WealthNode_Pawn(map, level + 1, p)));
+            subNodes.AddRange(map.mapPawns.PawnsInFaction(Faction.OfPlayer).Where(p => p.def == def && category.Matches(p) && !p.IsGhoul && !p.IsQuestLodger()).Select(p => new WealthNode_Pawn(this, map, level + 1, p)));
             Open = openDefs.Contains(def);
         }
 

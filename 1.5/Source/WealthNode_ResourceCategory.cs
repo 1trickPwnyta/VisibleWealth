@@ -11,12 +11,12 @@ namespace VisibleWealth
         private readonly ThingCategoryDef def;
         private readonly List<WealthNode> subNodes;
 
-        public WealthNode_ResourceCategory(Map map, int level, ThingCategoryDef def) : base(map, level)
+        public WealthNode_ResourceCategory(WealthNode parent, Map map, int level, ThingCategoryDef def) : base(parent, map, level)
         {
             this.def = def;
             subNodes = new List<WealthNode>();
-            subNodes.AddRange(def.childCategories.Select(d => new WealthNode_ResourceCategory(map, level + 1, d)));
-            subNodes.AddRange(def.childThingDefs.Select(d => new WealthNode_Item(map, level + 1, d)));
+            subNodes.AddRange(def.childCategories.Select(d => new WealthNode_ResourceCategory(this, map, level + 1, d)));
+            subNodes.AddRange(def.childThingDefs.Select(d => new WealthNode_Item(this, map, level + 1, d)));
             Open = openCategories.Contains(def);
         }
 

@@ -12,7 +12,7 @@ namespace VisibleWealth
         private readonly int quantity;
         private readonly float value;
 
-        public WealthNode_Building(Map map, int level, ThingDef def) : base(map, level)
+        public WealthNode_Building(WealthNode parent, Map map, int level, ThingDef def) : base(parent, map, level)
         {
             this.def = def;
             List<Thing> list = map.listerThings.ThingsOfDef(def).Where(b => b.Faction == Faction.OfPlayer).ToList();

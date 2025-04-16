@@ -9,7 +9,7 @@ namespace VisibleWealth
         private readonly Pawn pawn;
         private readonly float value;
 
-        public WealthNode_Pawn(Map map, int level, Pawn pawn) : base(map, level)
+        public WealthNode_Pawn(WealthNode parent, Map map, int level, Pawn pawn) : base(parent, map, level)
         {
             this.pawn = pawn;
             value = pawn.MarketValue * (pawn.IsSlave ? 0.75f : 1f);

@@ -13,7 +13,7 @@ namespace VisibleWealth
         private readonly int quantity;
         private readonly float value;
 
-        public WealthNode_Item(Map map, int level, ThingDef def) : base(map, level)
+        public WealthNode_Item(WealthNode parent, Map map, int level, ThingDef def) : base(parent, map, level)
         {
             this.def = def;
             List<Thing> things = new List<Thing>();
