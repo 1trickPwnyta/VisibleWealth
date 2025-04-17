@@ -7,20 +7,21 @@ using Verse.Sound;
 
 namespace VisibleWealth
 {
-    public abstract class WealthNode
+    public abstract class WealthNode : IPieFlavor
     {
-        public static readonly Vector2 Size = new Vector2(600f, 30f);
+        public static readonly float drawHeight = 30f;
         public static readonly Vector2 IconSize = new Vector2(25f, 25f);
         public static readonly float VerticalSpacing = 2f;
-        public static readonly Color Color = new Color(0.15f, 0.15f, 0.15f);
+        public static readonly Color BackgroundColor = new Color(0.15f, 0.15f, 0.15f);
         public static readonly float Indent = 20f;
 
         private bool open;
         private readonly int level;
-        public readonly Map Map;
+        public readonly Map map;
         public readonly WealthNode parent;
+        public readonly Color chartColor;
 
-        protected bool Open
+        public bool Open
         {
             get
             {
@@ -43,8 +44,9 @@ namespace VisibleWealth
         public WealthNode(WealthNode parent, Map map, int level)
         {
             this.parent = parent;
-            Map = map;
+            this.map = map;
             this.level = level;
+            chartColor = Color.HSVToRGB(Rand.Value, 0.3f + Rand.Value * 0.7f, 0.6f);
         }
 
         public IEnumerable<WealthNode> LeafNodes
@@ -83,6 +85,16 @@ namespace VisibleWealth
             return false;
         }
 
+        public long GetState()
+        {
+            long code = GetHashCode() * (open ? 1 : -1);
+            foreach (WealthNode child in Children)
+            {
+                code += child.GetState();
+            }
+            return code;
+        }
+
         public abstract string Text { get; }
 
         public abstract IEnumerable<WealthNode> Children { get; }
@@ -103,12 +115,12 @@ namespace VisibleWealth
 
         public virtual float DrawIcon(Rect rect) => 0f;
 
-        public void Draw(ref float y)
+        public void Draw(float width, ref float y)
         {
             if (ThisOrAnyChildMatchesSearch())
             {
-                Rect rect = new Rect(level * Indent, y, Size.x - level * Indent, Size.y);
-                Widgets.DrawRectFast(rect, Color);
+                Rect rect = new Rect(level * Indent, y, width - level * Indent, drawHeight);
+                Widgets.DrawRectFast(rect, BackgroundColor);
                 float x = 0f;
 
                 if (Children.Count() > 0)
@@ -139,13 +151,13 @@ namespace VisibleWealth
                     }
                 }
 
-                y += Size.y + VerticalSpacing;
+                y += drawHeight + VerticalSpacing;
 
                 if (Open || Dialog_WealthBreakdown.Search.filter.Active)
                 {
                     foreach (WealthNode node in SortChildren ? VisibleWealthSettings.SortBy.Sorted(Children, VisibleWealthSettings.SortAscending) : Children)
                     {
-                        node.Draw(ref y);
+                        node.Draw(width, ref y);
                     }
                 }
             }

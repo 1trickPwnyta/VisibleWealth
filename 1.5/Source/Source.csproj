@@ -65,6 +65,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ChartDef.cs" />
+    <Compile Include="ChartDefOf.cs" />
+    <Compile Include="ChartWorker.cs" />
+    <Compile Include="ChartWorker_List.cs" />
     <Compile Include="Debug.cs" />
     <Compile Include="Dialog_WealthBreakdown.cs" />
     <Compile Include="KeyBindingUtility.cs" />
@@ -72,8 +76,11 @@
     <Compile Include="Patch_UIRoot_Play.cs" />
     <Compile Include="PawnCategory.cs" />
     <Compile Include="PercentOf.cs" />
+    <Compile Include="Pie.cs" />
+    <Compile Include="ChartWorker_PieChart.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SortBy.cs" />
+    <Compile Include="VisibleWealthInitializer.cs" />
     <Compile Include="VisibleWealthMod.cs" />
     <Compile Include="VisibleWealthSettings.cs" />
     <Compile Include="WealthCategory.cs" />

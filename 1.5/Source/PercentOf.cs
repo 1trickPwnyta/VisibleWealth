@@ -45,8 +45,8 @@ namespace VisibleWealth
         {
             switch (percentOf)
             {
-                case PercentOf.Total: return "(" + (node.Value / node.Map.wealthWatcher.WealthTotal * 100).ToString("F1") + "%)";
-                case PercentOf.Category: return "(" + (node.Value / (node.parent?.Value ?? node.Map.wealthWatcher.WealthTotal) * 100).ToString("F0") + "%)";
+                case PercentOf.Total: return "(" + (node.Value / node.map.wealthWatcher.WealthTotal * 100).ToString("F1") + "%)";
+                case PercentOf.Category: return "(" + (node.Value / (node.parent?.Value ?? node.map.wealthWatcher.WealthTotal) * 100).ToString("F0") + "%)";
                 case PercentOf.None: return "";
                 default: throw new NotImplementedException("Invalid percent of.");
             }

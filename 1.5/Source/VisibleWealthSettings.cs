@@ -5,6 +5,7 @@ namespace VisibleWealth
 {
     public class VisibleWealthSettings : ModSettings
     {
+        public static ChartDef ChartType = ChartDefOf.List;
         public static SortBy SortBy = SortBy.Value;
         public static bool SortAscending = false;
         public static PercentOf PercentOf = PercentOf.Category;
@@ -22,6 +23,7 @@ namespace VisibleWealth
 
         public override void ExposeData()
         {
+            Scribe_Defs.Look(ref ChartType, "ChartType");
             Scribe_Values.Look(ref SortBy, "SortBy", SortBy.Value);
             Scribe_Values.Look(ref SortAscending, "SortAscending", false);
             Scribe_Values.Look(ref PercentOf, "PercentOf", PercentOf.Category);

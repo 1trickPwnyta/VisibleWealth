@@ -9,6 +9,7 @@ namespace VisibleWealth
         public const string PACKAGE_ID = "visiblewealth.1trickPwnyta";
         public const string PACKAGE_NAME = "Visible Wealth";
 
+        public static VisibleWealthMod Mod;
         public static VisibleWealthSettings Settings;
 
         public VisibleWealthMod(ModContentPack content) : base(content)
@@ -16,7 +17,7 @@ namespace VisibleWealth
             var harmony = new Harmony(PACKAGE_ID);
             harmony.PatchAll();
 
-            Settings = GetSettings<VisibleWealthSettings>();
+            Mod = this;
 
             Log.Message($"[{PACKAGE_NAME}] Loaded.");
         }

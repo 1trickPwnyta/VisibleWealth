@@ -1,4 +1,5 @@
 ﻿using RimWorld;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using Verse;
@@ -9,6 +10,7 @@ namespace VisibleWealth
     [StaticConstructorOnStartup]
     public class Dialog_WealthBreakdown : Window
     {
+        private static readonly float chartWidth = 600f;
         private static Vector2 scrollPosition;
         private static float y;
         public static QuickSearchWidget Search = new QuickSearchWidget();
@@ -24,7 +26,7 @@ namespace VisibleWealth
         private readonly WealthNode pawnsNode;
         private readonly WealthNode pocketMapsNode;
 
-        public override Vector2 InitialSize => new Vector2(WealthNode.Size.x + 20f + Window.StandardMargin * 2, 600f);
+        public override Vector2 InitialSize => new Vector2(chartWidth + 20f + Window.StandardMargin * 2, 600f);
 
         private Dialog_WealthBreakdown()
         {
@@ -54,6 +56,7 @@ namespace VisibleWealth
         public override void PostClose()
         {
             VisibleWealthMod.Settings.Write();
+            ChartWorker.CleanupAll();
         }
 
         public override void DoWindowContents(Rect inRect)
@@ -70,34 +73,25 @@ namespace VisibleWealth
             Search.OnGUI(searchRect);
 
             Rect outRect = new Rect(inRect.x, inRect.y + 45f + 30f + 10f, inRect.width, inRect.height - 45f - 30f - 10f - 24f - 10f - Window.CloseButSize.y - 10f);
-            Rect viewRect = new Rect(0f, 0f, WealthNode.Size.x, y);
+            Rect viewRect = new Rect(0f, 0f, chartWidth, y);
             Widgets.BeginScrollView(outRect, ref scrollPosition, viewRect);
             y = 0f;
-
-            itemsNode.Draw(ref y);
-            buildingsNode.Draw(ref y);
-            pawnsNode.Draw(ref y);
-            pocketMapsNode.Draw(ref y);
-
+            VisibleWealthSettings.ChartType.Worker.Draw(outRect, viewRect, ref y, new[] { itemsNode, buildingsNode, pawnsNode, pocketMapsNode });
+            if (Widgets.ButtonInvisible(viewRect, false))
+            {
+                VisibleWealthSettings.ChartType.Worker.OnClick(GUIUtility.ScreenToGUIPoint(UI.MousePositionOnUI - new Vector2((int)viewRect.width / 2f, (int)outRect.height / 2f)));
+            }
             Widgets.EndScrollView();
 
             Rect optionsRect = new Rect(inRect.x, inRect.yMax - Window.CloseButSize.y - 10f - 24f, inRect.width, 24f);
 
-            Rect sortByRect = new Rect(optionsRect.x, optionsRect.y, 24f, optionsRect.height);
-            if (Widgets.ButtonImage(sortByRect, VisibleWealthSettings.SortBy.GetIcon(), true, "VisibleWealth_SortBy".Translate(VisibleWealthSettings.SortBy.GetLabel())))
-            {
-                List<FloatMenuOption> options = new List<FloatMenuOption>();
-                foreach (SortBy sortBy in typeof(SortBy).GetEnumValues())
-                {
-                    options.Add(new FloatMenuOption("VisibleWealth_SortBy".Translate(sortBy.GetLabel()), () =>
-                    {
-                        VisibleWealthSettings.SortBy = sortBy;
-                    }, sortBy.GetIcon(), Color.white));
-                }
-                Find.WindowStack.Add(new FloatMenu(options));
-            }
+            Rect chartTypeRect = new Rect(optionsRect.x, optionsRect.y, 24f, optionsRect.height);
+            DoDefOption(chartTypeRect, VisibleWealthSettings.ChartType, c => c.Icon, c => VisibleWealthSettings.ChartType = c);
 
-            Rect sortDirectionRect = new Rect(optionsRect.x + 24f, optionsRect.y, 24f, optionsRect.height);
+            Rect sortByRect = new Rect(optionsRect.x + 48f, optionsRect.y, 24f, optionsRect.height);
+            DoEnumOption(sortByRect, VisibleWealthSettings.SortBy, s => s.GetIcon(), s => "VisibleWealth_SortBy".Translate(s.GetLabel()), s => VisibleWealthSettings.SortBy = s);
+
+            Rect sortDirectionRect = new Rect(optionsRect.x + 48f + 24f, optionsRect.y, 24f, optionsRect.height);
             if (Widgets.ButtonImage(sortDirectionRect, SortByUtility.SortDirectionIcon, true, VisibleWealthSettings.SortAscending ? "VisibleWealth_SortDirectionAscending".Translate() : "VisibleWealth_SortDirectionDescending".Translate()))
             {
                 VisibleWealthSettings.SortAscending = !VisibleWealthSettings.SortAscending;
@@ -106,16 +100,31 @@ namespace VisibleWealth
             Rect sortDirectionCheckRect = new Rect(sortDirectionRect.x + sortDirectionRect.width / 2, sortDirectionRect.y, sortDirectionRect.width / 2, sortDirectionRect.height / 2);
             GUI.DrawTexture(sortDirectionCheckRect, VisibleWealthSettings.SortAscending ? Widgets.CheckboxOnTex : Widgets.CheckboxOffTex);
 
-            Rect percentOfTotalRect = new Rect(optionsRect.x + 24f + 24f, optionsRect.y, 24f, optionsRect.height);
-            if (Widgets.ButtonImage(percentOfTotalRect, VisibleWealthSettings.PercentOf.GetIcon(), true, VisibleWealthSettings.PercentOf.GetLabel()))
+            Rect percentOfTotalRect = new Rect(optionsRect.x + 48f + 24f + 24f, optionsRect.y, 24f, optionsRect.height);
+            DoEnumOption(percentOfTotalRect, VisibleWealthSettings.PercentOf, p => p.GetIcon(), p => p.GetLabel(), p => VisibleWealthSettings.PercentOf = p);
+        }
+
+        private void DoDefOption<T>(Rect rect, T option, Func<T, Texture2D> icon, Action<T> callback) where T : Def
+        {
+            if (Widgets.ButtonImage(rect, icon(option), true, option.LabelCap))
             {
                 List<FloatMenuOption> options = new List<FloatMenuOption>();
-                foreach (PercentOf percentOf in typeof(PercentOf).GetEnumValues())
+                foreach (T choice in DefDatabase<T>.AllDefsListForReading)
                 {
-                    options.Add(new FloatMenuOption(percentOf.GetLabel(), () =>
-                    {
-                        VisibleWealthSettings.PercentOf = percentOf;
-                    }, percentOf.GetIcon(), Color.white));
+                    options.Add(new FloatMenuOption(choice.LabelCap, () => callback(choice), icon(choice), Color.white));
+                }
+                Find.WindowStack.Add(new FloatMenu(options));
+            }
+        }
+
+        private void DoEnumOption<T>(Rect rect, T option, Func<T, Texture2D> icon, Func<T, string> label, Action<T> callback) where T : Enum
+        {
+            if (Widgets.ButtonImage(rect, icon(option), true, label(option)))
+            {
+                List<FloatMenuOption> options = new List<FloatMenuOption>();
+                foreach (T choice in typeof(T).GetEnumValues())
+                {
+                    options.Add(new FloatMenuOption(label(choice), () => callback(choice), icon(choice), Color.white));
                 }
                 Find.WindowStack.Add(new FloatMenu(options));
             }
