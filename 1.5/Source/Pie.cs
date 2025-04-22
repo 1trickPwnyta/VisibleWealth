@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace VisibleWealth
 {
@@ -21,6 +22,10 @@ namespace VisibleWealth
                 slices.Add(new Tuple<float, T>(size, flavor));
             }
         }
+
+        public IEnumerable<Tuple<float, T>> Slices => slices;
+
+        public float TotalValue => slices.Last().Item1;
 
         public T GetSlice(float fraction)
         {

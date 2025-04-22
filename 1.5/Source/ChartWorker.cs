@@ -8,9 +8,20 @@ namespace VisibleWealth
     {
         public abstract void Draw(Rect outRect, Rect viewRect, ref float y, IEnumerable<WealthNode> rootNodes);
 
-        public abstract void OnClick(Vector2 pos);
+        public virtual void OnMouseOver(Vector2 pos, Rect outRect, Rect viewRect, IEnumerable<WealthNode> rootNodes)
+        {
 
-        public abstract void Cleanup();
+        }
+
+        public virtual void OnClick(Vector2 pos, Rect outRect, Rect viewRect, IEnumerable<WealthNode> rootNodes)
+        {
+
+        }
+
+        public virtual void Cleanup()
+        {
+
+        }
 
         public static void CleanupAll()
         {

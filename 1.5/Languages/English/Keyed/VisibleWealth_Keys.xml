@@ -20,4 +20,6 @@
 	<VisibleWealth_PercentOfTotal>Show percent of total wealth</VisibleWealth_PercentOfTotal>
 	<VisibleWealth_PercentOfCategory>Show percent of parent category</VisibleWealth_PercentOfCategory>
 	<VisibleWealth_PercentOfNone>Do not show percentages</VisibleWealth_PercentOfNone>
+	<VisibleWealth_ClickToExpand>Click to expand.</VisibleWealth_ClickToExpand>
+	<VisibleWealth_ClickToCollapse>Collapse {0}</VisibleWealth_ClickToCollapse>
 </LanguageData>

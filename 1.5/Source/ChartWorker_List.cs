@@ -13,15 +13,5 @@ namespace VisibleWealth
                 node.Draw(viewRect.width, ref y);
             }
         }
-
-        public override void OnClick(Vector2 pos)
-        {
-            
-        }
-
-        public override void Cleanup()
-        {
-            
-        }
     }
 }

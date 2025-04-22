@@ -26,7 +26,7 @@ namespace VisibleWealth
         private readonly WealthNode pawnsNode;
         private readonly WealthNode pocketMapsNode;
 
-        public override Vector2 InitialSize => new Vector2(chartWidth + 20f + Window.StandardMargin * 2, 600f);
+        public override Vector2 InitialSize => new Vector2(chartWidth + 20f + StandardMargin * 2, 600f);
 
         private Dialog_WealthBreakdown()
         {
@@ -69,21 +69,28 @@ namespace VisibleWealth
             Rect totalWealthRect = new Rect(inRect.x, inRect.y + 45f, inRect.width, 30f);
             Widgets.Label(totalWealthRect, "VisibleWealth_TotalWealth".Translate(map.wealthWatcher.WealthTotal.ToString("F0")));
 
-            Rect searchRect = new Rect(inRect.xMax - Window.QuickSearchSize.x, inRect.y + 45f, Window.QuickSearchSize.x, Window.QuickSearchSize.y);
+            Rect searchRect = new Rect(inRect.xMax - QuickSearchSize.x, inRect.y + 45f, QuickSearchSize.x, QuickSearchSize.y);
             Search.OnGUI(searchRect);
 
-            Rect outRect = new Rect(inRect.x, inRect.y + 45f + 30f + 10f, inRect.width, inRect.height - 45f - 30f - 10f - 24f - 10f - Window.CloseButSize.y - 10f);
+            Rect outRect = new Rect(inRect.x, inRect.y + 45f + 30f + 10f, inRect.width, inRect.height - 45f - 30f - 10f - 24f - 10f - CloseButSize.y - 10f);
             Rect viewRect = new Rect(0f, 0f, chartWidth, y);
             Widgets.BeginScrollView(outRect, ref scrollPosition, viewRect);
             y = 0f;
-            VisibleWealthSettings.ChartType.Worker.Draw(outRect, viewRect, ref y, new[] { itemsNode, buildingsNode, pawnsNode, pocketMapsNode });
+            IEnumerable<WealthNode> rootNodes = new[] { itemsNode, buildingsNode, pawnsNode, pocketMapsNode };
+            VisibleWealthSettings.ChartType.Worker.Draw(outRect, viewRect, ref y, rootNodes);
+            Vector2 mousePos = GUIUtility.ScreenToGUIPoint(UI.MousePositionOnUI);
+            mousePos.y = outRect.height - mousePos.y;
+            if (Mouse.IsOver(viewRect))
+            {
+                VisibleWealthSettings.ChartType.Worker.OnMouseOver(mousePos, outRect, viewRect, rootNodes);
+            }
             if (Widgets.ButtonInvisible(viewRect, false))
             {
-                VisibleWealthSettings.ChartType.Worker.OnClick(GUIUtility.ScreenToGUIPoint(UI.MousePositionOnUI - new Vector2((int)viewRect.width / 2f, (int)outRect.height / 2f)));
+                VisibleWealthSettings.ChartType.Worker.OnClick(mousePos, outRect, viewRect, rootNodes);
             }
             Widgets.EndScrollView();
 
-            Rect optionsRect = new Rect(inRect.x, inRect.yMax - Window.CloseButSize.y - 10f - 24f, inRect.width, 24f);
+            Rect optionsRect = new Rect(inRect.x, inRect.yMax - CloseButSize.y - 10f - 24f, inRect.width, 24f);
 
             Rect chartTypeRect = new Rect(optionsRect.x, optionsRect.y, 24f, optionsRect.height);
             DoDefOption(chartTypeRect, VisibleWealthSettings.ChartType, c => c.Icon, c => VisibleWealthSettings.ChartType = c);

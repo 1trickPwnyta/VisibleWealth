@@ -33,7 +33,7 @@ namespace VisibleWealth
                 if (open)
                 {
                     OnOpen();
-                }
+                } 
                 else
                 {
                     OnClose();
@@ -49,12 +49,14 @@ namespace VisibleWealth
             chartColor = Color.HSVToRGB(Rand.Value, 0.3f + Rand.Value * 0.7f, 0.6f);
         }
 
+        public bool IsLeafNode => Children.Count() == 0;
+
         public IEnumerable<WealthNode> LeafNodes
         {
             get 
             {
                 List<WealthNode> leafNodes = new List<WealthNode>();
-                if (Children.Count() == 0)
+                if (IsLeafNode)
                 {
                     leafNodes.Add(this);
                 }
@@ -85,17 +87,9 @@ namespace VisibleWealth
             return false;
         }
 
-        public long GetState()
-        {
-            long code = GetHashCode() * (open ? 1 : -1);
-            foreach (WealthNode child in Children)
-            {
-                code += child.GetState();
-            }
-            return code;
-        }
-
         public abstract string Text { get; }
+
+        public TaggedString GetLabel() => Text + " " + ("$" + Value.ToString("F0")).Colorize(ColoredText.CurrencyColor) + " " + VisibleWealthSettings.PercentOf.Text(this).Colorize(ColoredText.SubtleGrayColor);
 
         public abstract IEnumerable<WealthNode> Children { get; }
 
@@ -123,7 +117,7 @@ namespace VisibleWealth
                 Widgets.DrawRectFast(rect, BackgroundColor);
                 float x = 0f;
 
-                if (Children.Count() > 0)
+                if (!IsLeafNode)
                 {
                     Rect arrowRect = new Rect(rect.x + x, rect.y + (rect.height - IconSize.y) / 2, IconSize.x, IconSize.y);
                     if (Widgets.ButtonImage(arrowRect, Open ? TexButton.Collapse : TexButton.Reveal))
@@ -139,7 +133,7 @@ namespace VisibleWealth
 
                 Rect labelRect = new Rect(rect.x + x, rect.y, rect.width - x, rect.height);
                 Verse.Text.Anchor = TextAnchor.MiddleLeft;
-                Widgets.Label(labelRect, Text + " " + ("$" + Value.ToString("F0")).Colorize(ColoredText.CurrencyColor) + " " + VisibleWealthSettings.PercentOf.Text(this).Colorize(ColoredText.SubtleGrayColor));
+                Widgets.Label(labelRect, GetLabel());
                 Verse.Text.Anchor = TextAnchor.UpperLeft;
 
                 if (InfoDef != null || InfoThing != null)
