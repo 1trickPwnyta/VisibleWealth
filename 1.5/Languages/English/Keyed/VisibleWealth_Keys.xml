@@ -3,6 +3,8 @@
 	<VisibleWealth_WealthBreakdown>Wealth breakdown</VisibleWealth_WealthBreakdown>
 	<VisibleWealth_Calculating>Calculating</VisibleWealth_Calculating>
 	<VisibleWealth_TotalWealth>Total wealth: ${0}</VisibleWealth_TotalWealth>
+	<VisibleWealth_FlatPie>Flat</VisibleWealth_FlatPie>
+	<VisibleWealth_NestedPie>Nested</VisibleWealth_NestedPie>
 	<VisibleWealth_WealthItems>Items wealth</VisibleWealth_WealthItems>
 	<VisibleWealth_WealthBuildings>Buildings wealth</VisibleWealth_WealthBuildings>
 	<VisibleWealth_WealthPawns>Pawns wealth</VisibleWealth_WealthPawns>

@@ -9,6 +9,7 @@ namespace VisibleWealth
         public static SortBy SortBy = SortBy.Value;
         public static bool SortAscending = false;
         public static PercentOf PercentOf = PercentOf.Category;
+        public static PieStyle PieStyle = PieStyle.Nested;
 
         public static void DoSettingsWindowContents(Rect inRect)
         {
@@ -27,6 +28,7 @@ namespace VisibleWealth
             Scribe_Values.Look(ref SortBy, "SortBy", SortBy.Value);
             Scribe_Values.Look(ref SortAscending, "SortAscending", false);
             Scribe_Values.Look(ref PercentOf, "PercentOf", PercentOf.Category);
+            Scribe_Values.Look(ref PieStyle, "PieStyle", PieStyle.Nested);
         }
     }
 }

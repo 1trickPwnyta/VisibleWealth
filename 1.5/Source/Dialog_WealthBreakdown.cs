@@ -1,5 +1,4 @@
 ﻿using RimWorld;
-using System;
 using System.Collections.Generic;
 using UnityEngine;
 using Verse;
@@ -13,6 +12,7 @@ namespace VisibleWealth
         private static readonly float chartWidth = 600f;
         private static Vector2 scrollPosition;
         private static float y;
+        private static readonly ChartOption chartTypeOption = new ChartOption_Def<ChartDef>(() => VisibleWealthSettings.ChartType, option => VisibleWealthSettings.ChartType = option, option => option.Icon);
         public static QuickSearchWidget Search = new QuickSearchWidget();
 
         public static void Open()
@@ -93,47 +93,15 @@ namespace VisibleWealth
             Rect optionsRect = new Rect(inRect.x, inRect.yMax - CloseButSize.y - 10f - 24f, inRect.width, 24f);
 
             Rect chartTypeRect = new Rect(optionsRect.x, optionsRect.y, 24f, optionsRect.height);
-            DoDefOption(chartTypeRect, VisibleWealthSettings.ChartType, c => c.Icon, c => VisibleWealthSettings.ChartType = c);
+            chartTypeOption.DoOption(chartTypeRect);
 
-            Rect sortByRect = new Rect(optionsRect.x + 48f, optionsRect.y, 24f, optionsRect.height);
-            DoEnumOption(sortByRect, VisibleWealthSettings.SortBy, s => s.GetIcon(), s => "VisibleWealth_SortBy".Translate(s.GetLabel()), s => VisibleWealthSettings.SortBy = s);
+            Widgets.DrawLine(new Vector2(chartTypeRect.xMax + 12f, optionsRect.y), new Vector2(chartTypeRect.xMax + 12f, optionsRect.yMax), Color.gray, 1f);
 
-            Rect sortDirectionRect = new Rect(optionsRect.x + 48f + 24f, optionsRect.y, 24f, optionsRect.height);
-            if (Widgets.ButtonImage(sortDirectionRect, SortByUtility.SortDirectionIcon, true, VisibleWealthSettings.SortAscending ? "VisibleWealth_SortDirectionAscending".Translate() : "VisibleWealth_SortDirectionDescending".Translate()))
+            Rect optionRect = new Rect(optionsRect.x + 48f, optionsRect.y, 24f, optionsRect.height);
+            foreach (ChartOption option in VisibleWealthSettings.ChartType.Worker.Options)
             {
-                VisibleWealthSettings.SortAscending = !VisibleWealthSettings.SortAscending;
-                (VisibleWealthSettings.SortAscending ? SoundDefOf.Tick_High : SoundDefOf.Tick_Low).PlayOneShot(null);
-            }
-            Rect sortDirectionCheckRect = new Rect(sortDirectionRect.x + sortDirectionRect.width / 2, sortDirectionRect.y, sortDirectionRect.width / 2, sortDirectionRect.height / 2);
-            GUI.DrawTexture(sortDirectionCheckRect, VisibleWealthSettings.SortAscending ? Widgets.CheckboxOnTex : Widgets.CheckboxOffTex);
-
-            Rect percentOfTotalRect = new Rect(optionsRect.x + 48f + 24f + 24f, optionsRect.y, 24f, optionsRect.height);
-            DoEnumOption(percentOfTotalRect, VisibleWealthSettings.PercentOf, p => p.GetIcon(), p => p.GetLabel(), p => VisibleWealthSettings.PercentOf = p);
-        }
-
-        private void DoDefOption<T>(Rect rect, T option, Func<T, Texture2D> icon, Action<T> callback) where T : Def
-        {
-            if (Widgets.ButtonImage(rect, icon(option), true, option.LabelCap))
-            {
-                List<FloatMenuOption> options = new List<FloatMenuOption>();
-                foreach (T choice in DefDatabase<T>.AllDefsListForReading)
-                {
-                    options.Add(new FloatMenuOption(choice.LabelCap, () => callback(choice), icon(choice), Color.white));
-                }
-                Find.WindowStack.Add(new FloatMenu(options));
-            }
-        }
-
-        private void DoEnumOption<T>(Rect rect, T option, Func<T, Texture2D> icon, Func<T, string> label, Action<T> callback) where T : Enum
-        {
-            if (Widgets.ButtonImage(rect, icon(option), true, label(option)))
-            {
-                List<FloatMenuOption> options = new List<FloatMenuOption>();
-                foreach (T choice in typeof(T).GetEnumValues())
-                {
-                    options.Add(new FloatMenuOption(label(choice), () => callback(choice), icon(choice), Color.white));
-                }
-                Find.WindowStack.Add(new FloatMenu(options));
+                option.DoOption(optionRect);
+                optionRect.x += optionRect.width;
             }
         }
     }

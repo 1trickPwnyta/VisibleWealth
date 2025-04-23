@@ -67,6 +67,7 @@
   <ItemGroup>
     <Compile Include="ChartDef.cs" />
     <Compile Include="ChartDefOf.cs" />
+    <Compile Include="ChartOption.cs" />
     <Compile Include="ChartWorker.cs" />
     <Compile Include="ChartWorker_List.cs" />
     <Compile Include="Debug.cs" />
@@ -78,6 +79,7 @@
     <Compile Include="PercentOf.cs" />
     <Compile Include="Pie.cs" />
     <Compile Include="ChartWorker_PieChart.cs" />
+    <Compile Include="PieStyle.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SortBy.cs" />
     <Compile Include="VisibleWealthInitializer.cs" />

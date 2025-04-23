@@ -16,14 +16,27 @@ namespace VisibleWealth
             public float radius;
             public Pie<WealthNode> pie;
             public List<Tuple<WealthNode, float>> lowestOpenNodes;
-            public List<WealthNode> leftLabels;
-            public List<WealthNode> rightLabels;
+            public List<LabelData> leftLabels;
+            public List<LabelData> rightLabels;
+        }
+
+        private class LabelData
+        {
+            public WealthNode node;
+            public Rect textRect;
+            public Vector2 lineStart;
+            public Vector2 lineEnd;
         }
 
         private static readonly float radiusFactor = 0.4f;
         private static readonly float border = 1f;
         private static readonly float labelMargin = 50f;
         private static readonly Color transparent = new Color(0f, 0f, 0f, 0f);
+        private static readonly IEnumerable<ChartOption> options = new ChartOption[]
+        {
+            new ChartOption_Enum<PieStyle>(() => VisibleWealthSettings.PieStyle, option => VisibleWealthSettings.PieStyle = option, option => option.GetLabel(), option => option.GetIcon()), 
+            new ChartOption_Enum<PercentOf>(() => VisibleWealthSettings.PercentOf, option => VisibleWealthSettings.PercentOf = option, option => option.GetLabel(), option => option.GetIcon())
+        };
 
         private static float iteratorFraction;
         private static WealthNode mouseOverNode;
@@ -31,9 +44,11 @@ namespace VisibleWealth
 
         private Dictionary<long, PieChart> cache = new Dictionary<long, PieChart>();
 
+        public override IEnumerable<ChartOption> Options => options;
+
         public override void Draw(Rect outRect, Rect viewRect, ref float y, IEnumerable<WealthNode> rootNodes)
         {
-            long state = GetTotalState(rootNodes);
+            long state = GetState(rootNodes);
             PieChart chart;
             if (!cache.ContainsKey(state))
             {
@@ -51,7 +66,7 @@ namespace VisibleWealth
                     pie = pie,
                     lowestOpenNodes = LowestOpenNodes(rootNodes)
                 };
-                ListsForLabels(pie, out chart.leftLabels, out chart.rightLabels);
+                GetLabelData(chart, outRect, viewRect, out chart.leftLabels, out chart.rightLabels);
                 cache[state] = chart;
             }
             else
@@ -93,119 +108,105 @@ namespace VisibleWealth
             Text.Font = GameFont.Tiny;
             float totalValue = chart.pie.TotalValue;
             mouseOverLabel = false;
-            foreach (Tuple<float, WealthNode> slice in chart.pie.Slices)
+
+            Action<LabelData> drawAction = data =>
             {
-                WealthNode node = slice.Item2;
-                bool isLeft = chart.leftLabels.Contains(node);
-                bool isRight = chart.rightLabels.Contains(node);
-                if (isLeft || isRight)
+                Widgets.Label(data.textRect, data.node.GetLabel());
+                if (!data.node.IsLeafNode)
                 {
-                    float fraction = (slice.Item1 - slice.Item2.Value / 2f) / totalValue;
-                    Rect textRect;
-                    Vector2 startpoint;
-                    TaggedString label = node.GetLabel();
-                    float y;
-                    float width = viewRect.width / 2f - chart.radius - labelMargin;
-                    float height = Text.CalcHeight(label, width);
-                    if (isLeft)
+                    TooltipHandler.TipRegionByKey(data.textRect, "VisibleWealth_ClickToExpand");
+                }
+                if (!Dialog_WealthBreakdown.Search.filter.Active)
+                {
+                    if (Mouse.IsOver(data.textRect))
                     {
-                        y = (chart.leftLabels.IndexOf(node) + 1f) / (chart.leftLabels.Count + 1f) * outRect.height;
-                        textRect = new Rect(0f, y - height / 2f, width, height);
-                        Text.Anchor = TextAnchor.MiddleRight;
-                        startpoint = new Vector2(textRect.xMax + labelMargin / 4f, y);
-                    }
-                    else
-                    {
-                        y = (chart.rightLabels.IndexOf(node) + 1f) / (chart.rightLabels.Count + 1f) * outRect.height;
-                        textRect = new Rect(viewRect.width / 2f + chart.radius + labelMargin, y - height / 2f, width, height);
-                        Text.Anchor = TextAnchor.MiddleLeft;
-                        startpoint = new Vector2(textRect.x - labelMargin / 4f, y);
-                    }
-                    Vector2 endpoint;
-                    float graphY = UIToGraphCoord(new Vector2(0, y), outRect, viewRect).y;
-                    IEnumerable<float> edgePoints = EdgePoints(slice, graphY, chart);
-                    if (edgePoints.Any())
-                    {
-                        endpoint = new Vector2(edgePoints.Average(), graphY);
-                    }
-                    else
-                    {
-                        endpoint = GetVector(fraction, chart.radius * 0.8f);
-                    }
-                    Widgets.Label(textRect, label);
-                    Widgets.DrawHighlightIfMouseover(textRect);
-                    if (!node.IsLeafNode)
-                    {
-                        TooltipHandler.TipRegionByKey(textRect, "VisibleWealth_ClickToExpand");
-                    }
-                    if (Mouse.IsOver(textRect))
-                    {
-                        if (mouseOverNode != node)
+                        if (mouseOverNode != data.node)
                         {
-                            mouseOverNode = node;
+                            mouseOverNode = data.node;
                             SoundDefOf.Mouseover_Standard.PlayOneShot(null);
                         }
                         mouseOverLabel = true;
                     }
-                    if (Widgets.ButtonInvisible(textRect, false))
+                    if (mouseOverNode == data.node)
                     {
-                        if (!node.Open && !node.IsLeafNode)
+                        Widgets.DrawHighlight(data.textRect);
+                    }
+                    if (Widgets.ButtonInvisible(data.textRect, false))
+                    {
+                        if (!data.node.Open && !data.node.IsLeafNode)
                         {
-                            node.Open = true;
+                            data.node.Open = true;
                             SoundDefOf.TabOpen.PlayOneShot(null);
                         }
                     }
-                    Vector2 uiEndpoint = GraphToUICoord(endpoint, outRect, viewRect);
-                    Widgets.DrawLine(startpoint, uiEndpoint, Color.white, 1f);
-                    Rect endRect = new Rect(uiEndpoint.x - 1f, uiEndpoint.y - 1f, 3f, 3f);
-                    Widgets.DrawRectFast(endRect, Color.white);
-                    Text.Anchor = TextAnchor.UpperLeft;
                 }
+                Widgets.DrawLine(data.lineStart, data.lineEnd, Color.white, 1f);
+                Widgets.DrawRectFast(new Rect(data.lineEnd.x - 1f, data.lineEnd.y - 1f, 3f, 3f), Color.white);
+            };
+
+            Text.Anchor = TextAnchor.MiddleRight;
+            foreach (LabelData data in chart.leftLabels)
+            {
+                drawAction(data);
             }
+
+            Text.Anchor = TextAnchor.MiddleLeft;
+            foreach (LabelData data in chart.rightLabels)
+            {
+                drawAction(data);
+            }
+
+            Text.Anchor = TextAnchor.UpperLeft;
             Text.Font = GameFont.Small;
         }
 
         public override void OnMouseOver(Vector2 pos, Rect outRect, Rect viewRect, IEnumerable<WealthNode> rootNodes)
         {
-            long state = GetTotalState(rootNodes);
-            if (cache.ContainsKey(state))
+            if (!Dialog_WealthBreakdown.Search.filter.Active)
             {
-                PieChart chart = cache[state];
-                pos = UIToGraphCoord(pos, outRect, viewRect);
-                if (pos.magnitude < chart.radius)
+                long state = GetState(rootNodes);
+                if (cache.ContainsKey(state))
                 {
-                    float fraction = GetFraction(pos);
-                    WealthNode node = chart.pie.GetSlice(fraction);
-                    TipSignal tip = new TipSignal(node.GetLabel() + (!node.IsLeafNode ? "\n\n" + "VisibleWealth_ClickToExpand".Translate() : TaggedString.Empty));
-                    TooltipHandler.TipRegion(new Rect(Event.current.mousePosition, Vector2.one), tip);
-                    if (mouseOverNode != node)
+                    PieChart chart = cache[state];
+                    pos = UIToGraphCoord(pos, outRect, viewRect);
+                    if (pos.magnitude < chart.radius)
                     {
-                        mouseOverNode = node;
-                        SoundDefOf.Mouseover_Standard.PlayOneShot(null);
+                        float fraction = GetFraction(pos);
+                        WealthNode node = chart.pie.GetSlice(fraction);
+                        TipSignal tip = new TipSignal(node.GetLabel() + (!node.IsLeafNode ? "\n\n" + "VisibleWealth_ClickToExpand".Translate() : TaggedString.Empty));
+                        TooltipHandler.TipRegion(new Rect(Event.current.mousePosition, Vector2.one), tip);
+                        if (mouseOverNode != node)
+                        {
+                            mouseOverNode = node;
+                            SoundDefOf.Mouseover_Standard.PlayOneShot(null);
+                        }
                     }
-                }
-                else if (!mouseOverLabel)
-                {
-                    mouseOverNode = null;
+                    else if (!mouseOverLabel)
+                    {
+                        mouseOverNode = null;
+                    }
                 }
             }
         }
 
         public override void OnClick(Vector2 pos, Rect outRect, Rect viewRect, IEnumerable<WealthNode> rootNodes)
         {
-            long state = GetTotalState(rootNodes);
-            if (cache.ContainsKey(state))
+            if (!Dialog_WealthBreakdown.Search.filter.Active)
             {
-                PieChart chart = cache[state];
-                pos = UIToGraphCoord(pos, outRect, viewRect);
-                if (pos.magnitude < chart.radius)
+                long state = GetState(rootNodes);
+                if (cache.ContainsKey(state))
                 {
-                    float fraction = GetFraction(pos);
-                    WealthNode node = chart.pie.GetSlice(fraction);
-                    if (!node.Open && !node.IsLeafNode)
+                    PieChart chart = cache[state];
+                    pos = UIToGraphCoord(pos, outRect, viewRect);
+                    if (pos.magnitude < chart.radius)
                     {
-                        node.Open = true;
-                        SoundDefOf.TabOpen.PlayOneShot(null);
+                        float fraction = GetFraction(pos);
+                        WealthNode node = chart.pie.GetSlice(fraction);
+                        if (!node.Open && !node.IsLeafNode)
+                        {
+                            node.Open = true;
+                            SoundDefOf.TabOpen.PlayOneShot(null);
+                        }
                     }
                 }
             }
@@ -247,7 +248,21 @@ namespace VisibleWealth
                 {
                     float fraction = GetFraction(pos);
                     WealthNode node = pie.GetSlice(fraction);
-                    return mouseOverNode == node ? node.chartColor.ClampToValueRange(new FloatRange(0.8f)) : node.chartColor;
+                    if (Dialog_WealthBreakdown.Search.filter.Active)
+                    {
+                        return node.MatchesSearch() ? node.chartColor : Color.gray;
+                    }
+                    else
+                    {
+                        if (mouseOverNode == node)
+                        {
+                            return node.chartColor.ClampToValueRange(new FloatRange(0.8f));
+                        }
+                        else
+                        {
+                            return node.chartColor;
+                        }
+                    }
                 }
             }
             else
@@ -262,7 +277,7 @@ namespace VisibleWealth
         {
             foreach (WealthNode node in nodes)
             {
-                if (node.Open)
+                if ((node.Open && !Dialog_WealthBreakdown.Search.filter.Active) || (Dialog_WealthBreakdown.Search.filter.Active && !node.MatchesSearch() && node.ThisOrAnyChildMatchesSearch()))
                 {
                     foreach (WealthNode child in Flatten(node.Children))
                     {
@@ -318,14 +333,17 @@ namespace VisibleWealth
             }
         }
 
-        private static void ListsForLabels(Pie<WealthNode> pie, out List<WealthNode> left, out List<WealthNode> right)
+        private static void GetLabelData(PieChart chart, Rect outRect, Rect viewRect, out List<LabelData> left, out List<LabelData> right)
         {
-            float totalValue = pie.TotalValue;
+            Text.Font = GameFont.Tiny;
+            float totalValue = chart.pie.TotalValue;
+            float labelWidth = viewRect.width / 2f - chart.radius - labelMargin;
+
             List<Tuple<float, WealthNode>> leftSlices = new List<Tuple<float, WealthNode>>();
             List<Tuple<float, WealthNode>> rightSlices = new List<Tuple<float, WealthNode>>();
-            foreach (Tuple<float, WealthNode> slice in pie.Slices)
+            foreach (Tuple<float, WealthNode> slice in chart.pie.Slices)
             {
-                if (slice.Item2.Value > 0f)
+                if (slice.Item2.Value > 0f && (!Dialog_WealthBreakdown.Search.filter.Active || slice.Item2.MatchesSearch()))
                 {
                     float fraction = (slice.Item1 - slice.Item2.Value / 2f) / totalValue;
                     if (fraction < 0.5f)
@@ -339,13 +357,43 @@ namespace VisibleWealth
                 }
             }
 
+            Func<Tuple<float, WealthNode>, float, float, Vector2> getLineEndAction = (slice, y, fraction) =>
+            {
+                float graphY = UIToGraphCoord(new Vector2(0, y), outRect, viewRect).y;
+                IEnumerable<float> edgePoints = EdgePoints(slice, graphY, chart);
+                if (edgePoints.Any(x => x != 0f))
+                {
+                    return GraphToUICoord(new Vector2(edgePoints.Average(), graphY), outRect, viewRect);
+                }
+                else
+                {
+                    return GraphToUICoord(GetVector(fraction, chart.radius * 0.8f), outRect, viewRect);
+                }
+            };
+
             if (leftSlices.Count > 6)
             {
                 leftSlices.SortByDescending(s => s.Item2.Value);
                 leftSlices.RemoveRange(6, leftSlices.Count - 6);
             }
             leftSlices.SortByDescending(s => s.Item1);
-            left = leftSlices.Select(s => s.Item2).ToList();
+
+            left = new List<LabelData>();
+            for (int i = 0; i < leftSlices.Count; i++)
+            {
+                Tuple<float, WealthNode> slice = leftSlices[i];
+                float y = (i + 1f) / (leftSlices.Count + 1f) * outRect.height;
+                float labelHeight = Text.CalcHeight(slice.Item2.GetLabel(), labelWidth);
+                Rect textRect = new Rect(0f, y - labelHeight / 2f, labelWidth, labelHeight);
+                float fraction = (slice.Item1 - slice.Item2.Value / 2f) / totalValue;
+                left.Add(new LabelData()
+                {
+                    node = slice.Item2,
+                    textRect = textRect,
+                    lineStart = new Vector2(textRect.xMax + labelMargin / 4f, y),
+                    lineEnd = getLineEndAction(slice, y, fraction)
+                });
+            }
 
             if (rightSlices.Count > 6)
             {
@@ -353,7 +401,25 @@ namespace VisibleWealth
                 rightSlices.RemoveRange(6, rightSlices.Count - 6);
             }
             rightSlices.SortBy(s => s.Item1);
-            right = rightSlices.Select(s => s.Item2).ToList();
+
+            right = new List<LabelData>();
+            for (int i = 0; i < rightSlices.Count; i++)
+            {
+                Tuple<float, WealthNode> slice = rightSlices[i];
+                float y = (i + 1f) / (rightSlices.Count + 1f) * outRect.height;
+                float labelHeight = Text.CalcHeight(slice.Item2.GetLabel(), labelWidth);
+                Rect textRect = new Rect(viewRect.width / 2f + chart.radius + labelMargin, y - labelHeight / 2f, labelWidth, labelHeight);
+                float fraction = (slice.Item1 - slice.Item2.Value / 2f) / totalValue;
+                right.Add(new LabelData()
+                {
+                    node = slice.Item2,
+                    textRect = textRect,
+                    lineStart = new Vector2(textRect.x - labelMargin / 4f, y),
+                    lineEnd = getLineEndAction(slice, y, fraction)
+                });
+            }
+
+            Text.Font = GameFont.Small;
         }
 
         private static IEnumerable<float> EdgePoints(Tuple<float, WealthNode> slice, float y, PieChart chart)
@@ -453,15 +519,15 @@ namespace VisibleWealth
             return new Vector2(x, y);
         }
 
-        private static long GetTotalState(IEnumerable<WealthNode> nodes) => nodes.Sum(n => GetState(n));
+        private static long GetState(IEnumerable<WealthNode> nodes) => nodes.Sum(n => GetNodeState(n)) + Dialog_WealthBreakdown.Search.filter.Text.GetHashCode();
 
-        private static long GetState(WealthNode node)
+        private static long GetNodeState(WealthNode node)
         {
             int code = node.GetHashCode();
             long state = code * 2950 * (node.Open ? 1 : -1) + code * 790372 * (node == mouseOverNode ? 1 : -1);
             foreach (WealthNode child in node.Children)
             {
-                state += GetState(child);
+                state += GetNodeState(child);
             }
             return state;
         }

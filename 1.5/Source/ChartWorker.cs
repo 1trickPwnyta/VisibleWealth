@@ -8,6 +8,8 @@ namespace VisibleWealth
     {
         public abstract void Draw(Rect outRect, Rect viewRect, ref float y, IEnumerable<WealthNode> rootNodes);
 
+        public virtual IEnumerable<ChartOption> Options => new ChartOption[0];
+
         public virtual void OnMouseOver(Vector2 pos, Rect outRect, Rect viewRect, IEnumerable<WealthNode> rootNodes)
         {
 

@@ -71,9 +71,11 @@ namespace VisibleWealth
             }
         }
 
+        public bool MatchesSearch() => Visible && Dialog_WealthBreakdown.Search.filter.Matches(Text);
+
         public bool ThisOrAnyChildMatchesSearch()
         {
-            if (Visible && Dialog_WealthBreakdown.Search.filter.Matches(Text))
+            if (MatchesSearch())
             {
                 return true;
             }
