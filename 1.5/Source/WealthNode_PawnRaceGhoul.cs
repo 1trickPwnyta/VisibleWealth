@@ -9,11 +9,10 @@ namespace VisibleWealth
     {
         private static bool open = false;
 
-        private readonly List<WealthNode> subNodes;
+        private readonly List<WealthNode> subNodes = new List<WealthNode>();
 
         public WealthNode_PawnRaceGhoul(WealthNode parent, Map map, int level) : base(parent, map, level)
         {
-            subNodes = new List<WealthNode>();
             subNodes.AddRange(map.mapPawns.PawnsInFaction(Faction.OfPlayer).Where(p => p.IsGhoul && !p.IsQuestLodger()).Select(p => new WealthNode_Pawn(this, map, level + 1, p)));
             Open = open;
         }
@@ -24,7 +23,7 @@ namespace VisibleWealth
 
         public override bool Visible => subNodes.Any(n => n.Visible);
 
-        public override float Value => subNodes.Sum(n => n.Value);
+        public override float RawValue => subNodes.Sum(n => n.Value);
 
         public override void OnOpen()
         {

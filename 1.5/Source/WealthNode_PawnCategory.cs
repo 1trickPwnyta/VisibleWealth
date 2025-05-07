@@ -10,12 +10,11 @@ namespace VisibleWealth
         private static readonly HashSet<PawnCategory> openCategories = new HashSet<PawnCategory>();
 
         private readonly PawnCategory category;
-        private readonly List<WealthNode> subNodes;
+        private readonly List<WealthNode> subNodes = new List<WealthNode>();
 
         public WealthNode_PawnCategory(WealthNode parent, Map map, int level, PawnCategory category) : base(parent, map, level)
         {
             this.category = category;
-            subNodes = new List<WealthNode>();
             if (category == PawnCategory.Human)
             {
                 subNodes.AddRange(map.mapPawns.PawnsInFaction(Faction.OfPlayer).Where(p => category.Matches(p) && !p.IsQuestLodger()).Select(p => new WealthNode_Pawn(this, map, level + 1, p)));
@@ -37,7 +36,7 @@ namespace VisibleWealth
 
         public override bool Visible => subNodes.Any(n => n.Visible);
 
-        public override float Value => subNodes.Sum(n => n.Value);
+        public override float RawValue => subNodes.Sum(n => n.Value);
 
         public override void OnOpen()
         {

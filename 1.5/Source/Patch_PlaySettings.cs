@@ -14,7 +14,7 @@ namespace VisibleWealth
 
         public static void Postfix(WidgetRow row, bool worldView)
         {
-            if (!worldView)
+            if (VisibleWealthSettings.PlaySettingsButton && !worldView)
             {
                 string keyCodeText = "";
                 KeyCode keyCode = KeyPrefs.KeyPrefsData.GetBoundKeyCode(KeyBindingUtility.WealthBreakdown, KeyPrefs.BindingSlot.A);

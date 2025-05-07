@@ -20,8 +20,8 @@ namespace VisibleWealth
         {
             switch (pieStyle)
             {
-                case PieStyle.Flat: return "VisibleWealth_FlatPie".Translate();
-                case PieStyle.Nested: return "VisibleWealth_NestedPie".Translate();
+                case PieStyle.Flat: return "VisibleWealth_Flat".Translate();
+                case PieStyle.Nested: return "VisibleWealth_Nested".Translate();
                 default: throw new NotImplementedException("Invalid pie style.");
             }
         }

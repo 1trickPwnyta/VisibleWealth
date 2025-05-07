@@ -11,12 +11,11 @@ namespace VisibleWealth
         private static readonly HashSet<DesignationCategoryDef> openCategories = new HashSet<DesignationCategoryDef>();
 
         private readonly DesignationCategoryDef def;
-        private readonly List<WealthNode> subNodes;
+        private readonly List<WealthNode> subNodes = new List<WealthNode>();
 
         public WealthNode_BuildingCategory(WealthNode parent, Map map, int level, DesignationCategoryDef def) : base(parent, map, level)
         {
             this.def = def;
-            subNodes = new List<WealthNode>();
             subNodes.AddRange(DefDatabase<ThingDef>.AllDefsListForReading.Where(d => d.designationCategory == def && ThingRequestGroup.BuildingArtificial.Includes(d)).Select(d => new WealthNode_Building(this, map, level + 1, d)));
             if (def == DesignationCategoryDefOf.Floors)
             {
@@ -31,7 +30,7 @@ namespace VisibleWealth
 
         public override bool Visible => subNodes.Any(n => n.Visible);
 
-        public override float Value => subNodes.Sum(n => n.Value);
+        public override float RawValue => subNodes.Sum(n => n.Value);
 
         public override void OnOpen()
         {

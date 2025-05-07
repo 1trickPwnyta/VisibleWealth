@@ -21,7 +21,7 @@ namespace VisibleWealth
 
         public override bool Visible => true;
 
-        public override float Value => value;
+        public override float RawValue => value;
 
         public override float DrawIcon(Rect rect)
         {
@@ -29,6 +29,6 @@ namespace VisibleWealth
             return IconSize.x + 2f;
         }
 
-        public override Thing InfoThing => pawn;
+        protected override Thing InfoThing => pawn;
     }
 }

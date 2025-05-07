@@ -11,12 +11,11 @@ namespace VisibleWealth
         private static readonly HashSet<WealthCategory> openCategories = new HashSet<WealthCategory>();
 
         private readonly WealthCategory category;
-        private readonly List<WealthNode> subNodes;
+        private readonly List<WealthNode> subNodes = new List<WealthNode>();
 
         public WealthNode_WealthCategory(WealthNode parent, Map map, int level, WealthCategory category) : base(parent, map, level)
         {
             this.category = category;
-            subNodes = new List<WealthNode>();
             switch (category)
             {
                 case WealthCategory.Items:
@@ -46,7 +45,7 @@ namespace VisibleWealth
 
         public override bool Visible => category != WealthCategory.PocketMaps || subNodes.Any(n => n.Visible);
 
-        public override float Value => subNodes.Sum(n => n.Value);
+        public override float RawValue => subNodes.Sum(n => n.Value);
 
         public override void OnOpen()
         {

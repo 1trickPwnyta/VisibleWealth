@@ -15,6 +15,7 @@ namespace VisibleWealth
             public Texture2D tex;
             public float radius;
             public Pie<WealthNode> pie;
+            public Dictionary<int, HashSet<float>> siblingEdgeFractions;
             public List<Tuple<WealthNode, float>> lowestOpenNodes;
             public List<LabelData> leftLabels;
             public List<LabelData> rightLabels;
@@ -30,12 +31,16 @@ namespace VisibleWealth
 
         private static readonly float radiusFactor = 0.4f;
         private static readonly float border = 1f;
+        private static readonly float nestLevelThickness = 8f;
         private static readonly float labelMargin = 50f;
         private static readonly Color transparent = new Color(0f, 0f, 0f, 0f);
+        private static readonly Color gray = new Color(0.25f, 0.25f, 0.25f);
         private static readonly IEnumerable<ChartOption> options = new ChartOption[]
         {
-            new ChartOption_Enum<PieStyle>(() => VisibleWealthSettings.PieStyle, option => VisibleWealthSettings.PieStyle = option, option => option.GetLabel(), option => option.GetIcon()), 
-            new ChartOption_Enum<PercentOf>(() => VisibleWealthSettings.PercentOf, option => VisibleWealthSettings.PercentOf = option, option => option.GetLabel(), option => option.GetIcon())
+            new ChartOption_Enum<PieStyle>(() => VisibleWealthSettings.PieStyle, option => VisibleWealthSettings.PieStyle = option, "VisibleWealth_PieStyle".Translate(), option => option.GetLabel(), option => option.GetIcon()),
+            ChartOption.CollapseAll, 
+            ChartOption.PercentOf,
+            ChartOption.RaidPointMode
         };
 
         private static float iteratorFraction;
@@ -56,16 +61,17 @@ namespace VisibleWealth
                 float radius = size * radiusFactor;
                 Texture2D tex = new Texture2D(size, size, TextureFormat.RGBA32, true);
                 Pie<WealthNode> pie = new Pie<WealthNode>(Flatten(rootNodes));
-                tex.SetPixelData(GetPixelData(size, radius, pie), 0);
-                tex.filterMode = FilterMode.Point;
-                tex.Apply(updateMipmaps: false);
                 chart = new PieChart()
                 {
                     tex = tex,
                     radius = radius,
                     pie = pie,
+                    siblingEdgeFractions = CalculateSiblingEdgeFractions(pie), 
                     lowestOpenNodes = LowestOpenNodes(rootNodes)
                 };
+                tex.SetPixelData(GetPixelData(size, radius, chart), 0);
+                tex.filterMode = FilterMode.Point;
+                tex.Apply(updateMipmaps: false);
                 GetLabelData(chart, outRect, viewRect, out chart.leftLabels, out chart.rightLabels);
                 cache[state] = chart;
             }
@@ -83,22 +89,25 @@ namespace VisibleWealth
 
         private void DrawButtons(PieChart chart, Rect outRect, Rect viewRect)
         {
-            foreach (Tuple<WealthNode, float> node in chart.lowestOpenNodes)
+            if (!Dialog_WealthBreakdown.Search.filter.Active && VisibleWealthSettings.PieStyle == PieStyle.Flat)
             {
-                Vector2 pos = GetVector(node.Item2, chart.radius + 15f);
-                Rect rect = Rect.zero.ExpandedBy(15f);
-                rect.position += GraphToUICoord(pos, outRect, viewRect);
-                if (Mouse.IsOver(rect))
+                foreach (Tuple<WealthNode, float> node in chart.lowestOpenNodes)
                 {
-                    GUI.color = GenUI.MouseoverColor;
-                }
-                Widgets.DrawTextureRotated(rect, TexButton.Reveal, 90f + node.Item2 * 360f);
-                GUI.color = Color.white;
-                TooltipHandler.TipRegion(rect, new TipSignal("VisibleWealth_ClickToCollapse".Translate(node.Item1.Text)));
-                if (Widgets.ButtonInvisible(rect))
-                {
-                    node.Item1.Open = false;
-                    SoundDefOf.TabClose.PlayOneShot(null);
+                    Vector2 pos = GetVector(node.Item2, chart.radius + 15f);
+                    Rect rect = Rect.zero.ExpandedBy(15f);
+                    rect.position += GraphToUICoord(pos, outRect, viewRect);
+                    if (Mouse.IsOver(rect))
+                    {
+                        GUI.color = GenUI.MouseoverColor;
+                    }
+                    Widgets.DrawTextureRotated(rect, TexButton.Reveal, 90f + node.Item2 * 360f);
+                    GUI.color = Color.white;
+                    TooltipHandler.TipRegion(rect, new TipSignal("VisibleWealth_ClickToCollapse".Translate(node.Item1.Text)));
+                    if (Widgets.ButtonInvisible(rect))
+                    {
+                        node.Item1.Open = false;
+                        SoundDefOf.TabClose.PlayOneShot(null);
+                    }
                 }
             }
         }
@@ -106,16 +115,12 @@ namespace VisibleWealth
         private void DrawLabels(PieChart chart, Rect outRect, Rect viewRect)
         {
             Text.Font = GameFont.Tiny;
-            float totalValue = chart.pie.TotalValue;
             mouseOverLabel = false;
 
             Action<LabelData> drawAction = data =>
             {
                 Widgets.Label(data.textRect, data.node.GetLabel());
-                if (!data.node.IsLeafNode)
-                {
-                    TooltipHandler.TipRegionByKey(data.textRect, "VisibleWealth_ClickToExpand");
-                }
+                TooltipHandler.TipRegionByKey(data.textRect, data.node.IsLeafNode ? "VisibleWealth_ClickForInfo" : "VisibleWealth_ClickToExpand");
                 if (!Dialog_WealthBreakdown.Search.filter.Active)
                 {
                     if (Mouse.IsOver(data.textRect))
@@ -133,7 +138,11 @@ namespace VisibleWealth
                     }
                     if (Widgets.ButtonInvisible(data.textRect, false))
                     {
-                        if (!data.node.Open && !data.node.IsLeafNode)
+                        if (data.node.IsLeafNode)
+                        {
+                            data.node.ShowInfoCard();
+                        }
+                        else if (!data.node.Open)
                         {
                             data.node.Open = true;
                             SoundDefOf.TabOpen.PlayOneShot(null);
@@ -173,7 +182,34 @@ namespace VisibleWealth
                     {
                         float fraction = GetFraction(pos);
                         WealthNode node = chart.pie.GetSlice(fraction);
-                        TipSignal tip = new TipSignal(node.GetLabel() + (!node.IsLeafNode ? "\n\n" + "VisibleWealth_ClickToExpand".Translate() : TaggedString.Empty));
+                        bool originalNode = true;
+                        if (VisibleWealthSettings.PieStyle == PieStyle.Nested)
+                        {
+                            WealthNode nestedParentNode = GetNestedNodeParent(node, chart.radius, pos.magnitude);
+                            if (nestedParentNode != node)
+                            {
+                                node = nestedParentNode;
+                                originalNode = false;
+                            }
+                        }
+                        TaggedString tipText;
+                        if (originalNode)
+                        {
+                            tipText = node.GetLabel();
+                            if (!node.IsLeafNode)
+                            {
+                                tipText += "\n\n" + "VisibleWealth_ClickToExpand".Translate();
+                            }
+                            else
+                            {
+                                tipText += "\n\n" + "VisibleWealth_ClickForInfo".Translate();
+                            }
+                        }
+                        else
+                        {
+                            tipText = "VisibleWealth_ClickToCollapse".Translate(node.Text);
+                        }
+                        TipSignal tip = new TipSignal(tipText);
                         TooltipHandler.TipRegion(new Rect(Event.current.mousePosition, Vector2.one), tip);
                         if (mouseOverNode != node)
                         {
@@ -187,6 +223,15 @@ namespace VisibleWealth
                     }
                 }
             }
+            else
+            {
+                mouseOverNode = null;
+            }
+        }
+
+        public override void OnMouseNotOver(IEnumerable<WealthNode> rootNodes)
+        {
+            mouseOverNode = null;
         }
 
         public override void OnClick(Vector2 pos, Rect outRect, Rect viewRect, IEnumerable<WealthNode> rootNodes)
@@ -202,10 +247,27 @@ namespace VisibleWealth
                     {
                         float fraction = GetFraction(pos);
                         WealthNode node = chart.pie.GetSlice(fraction);
-                        if (!node.Open && !node.IsLeafNode)
+                        WealthNode nestedNodeParent = node;
+                        if (VisibleWealthSettings.PieStyle == PieStyle.Nested)
                         {
-                            node.Open = true;
-                            SoundDefOf.TabOpen.PlayOneShot(null);
+                            nestedNodeParent = GetNestedNodeParent(node, chart.radius, pos.magnitude);
+                        }
+                        if (nestedNodeParent == node)
+                        {
+                            if (node.IsLeafNode)
+                            {
+                                node.ShowInfoCard();
+                            }
+                            else if (!node.Open)
+                            {
+                                node.Open = true;
+                                SoundDefOf.TabOpen.PlayOneShot(null);
+                            }
+                        }
+                        else
+                        {
+                            nestedNodeParent.Open = false;
+                            SoundDefOf.TabClose.PlayOneShot(null);
                         }
                     }
                 }
@@ -218,14 +280,14 @@ namespace VisibleWealth
             Resources.UnloadUnusedAssets();
         }
 
-        private byte[] GetPixelData(int size, float radius, Pie<WealthNode> pie)
+        private byte[] GetPixelData(int size, float radius, PieChart chart)
         {
             byte[] bytes = new byte[size * size * 4];
             for (int i = 0, y = size - 1; y >= 0; y--)
             {
                 for (int x = 0; x < size; x++, i += 4)
                 {
-                    Color c = GetColor(x, y, pie, size, radius);
+                    Color c = GetColor(x, y, chart, size, radius);
                     bytes[i] = (byte)(c.r * 255);
                     bytes[i + 1] = (byte)(c.g * 255);
                     bytes[i + 2] = (byte)(c.b * 255);
@@ -235,7 +297,7 @@ namespace VisibleWealth
             return bytes;
         }
 
-        private Color GetColor(int x, int y, Pie<WealthNode> pie, int size, float radius)
+        private Color GetColor(int x, int y, PieChart chart, int size, float radius)
         {
             Vector2 pos = DataToGraphCoord(new Vector2(x, y), size);
             if (pos.magnitude < radius)
@@ -247,20 +309,30 @@ namespace VisibleWealth
                 else
                 {
                     float fraction = GetFraction(pos);
-                    WealthNode node = pie.GetSlice(fraction);
+                    WealthNode node = chart.pie.GetSlice(fraction);
                     if (Dialog_WealthBreakdown.Search.filter.Active)
                     {
-                        return node.MatchesSearch() ? node.chartColor : Color.gray;
+                        return node.MatchesSearch() ? node.ChartColor : gray;
                     }
                     else
                     {
-                        if (mouseOverNode == node)
+                        if (VisibleWealthSettings.PieStyle == PieStyle.Nested && pos.magnitude > radius - node.level * nestLevelThickness)
                         {
-                            return node.chartColor.ClampToValueRange(new FloatRange(0.8f));
+                            float rawLevel = GetNestLevel(radius, pos.magnitude);
+                            int level = (int)rawLevel;
+                            if (rawLevel - level > 0.9f || (chart.siblingEdgeFractions.ContainsKey(level) && chart.siblingEdgeFractions[level].Any(f => Mathf.Abs(fraction - f) < 0.0007f)))
+                            {
+                                return Color.white;
+                            }
+                            else
+                            {
+                                node = GetNestedNodeParent(node, radius, pos.magnitude);
+                                return mouseOverNode == node ? GetHighlightColor(gray) : gray;
+                            }
                         }
                         else
                         {
-                            return node.chartColor;
+                            return mouseOverNode == node ? GetHighlightColor(node.ChartColor) : node.ChartColor;
                         }
                     }
                 }
@@ -272,6 +344,24 @@ namespace VisibleWealth
         }
 
         private static float GetSize(Rect rect) => Mathf.Min(rect.width, rect.height);
+
+        private static float GetNestLevel(float radius, float magnitude) => (radius - magnitude) / nestLevelThickness;
+
+        private static Color GetHighlightColor(Color color)
+        {
+            Color.RGBToHSV(color, out _, out _, out float v);
+            return color.ClampToValueRange(new FloatRange(Mathf.Min(v + 0.2f, 1f)));
+        }
+
+        private static WealthNode GetNestedNodeParent(WealthNode node, float radius, float magnitude)
+        {
+            int levelDiff = node.level - (int)GetNestLevel(radius, magnitude);
+            for (int i = 0; i < levelDiff; i++)
+            {
+                node = node.parent;
+            }
+            return node;
+        }
 
         private static IEnumerable<WealthNode> Flatten(IEnumerable<WealthNode> nodes)
         {
@@ -299,7 +389,7 @@ namespace VisibleWealth
 
         private static IEnumerable<Tuple<WealthNode, float>> LowestOpenNodes_Recursive(IEnumerable<WealthNode> nodes)
         {
-            float totalValue = nodes.ElementAt(0).map.wealthWatcher.WealthTotal;
+            float totalValue = Dialog_WealthBreakdown.Current.TotalWealth;
             foreach (WealthNode node in nodes)
             {
                 float nodeFraction = node.Value / totalValue;
@@ -424,7 +514,12 @@ namespace VisibleWealth
 
         private static IEnumerable<float> EdgePoints(Tuple<float, WealthNode> slice, float y, PieChart chart)
         {
-            float arc = chart.radius * chart.radius - y * y;
+            float radius = chart.radius;
+            if (VisibleWealthSettings.PieStyle == PieStyle.Nested)
+            {
+                radius -= slice.Item2.level * nestLevelThickness;
+            }
+            float arc = radius * radius - y * y;
             if (arc >= 0f)
             {
                 float sqrt = Mathf.Sqrt(arc);
@@ -443,12 +538,12 @@ namespace VisibleWealth
             }
             else
             {
-                Vector2 lowerEdge = GetVector((slice.Item1 - slice.Item2.Value) / chart.pie.TotalValue, chart.radius);
-                Vector2 upperEdge = GetVector(slice.Item1 / chart.pie.TotalValue, chart.radius);
+                Vector2 lowerEdge = GetVector((slice.Item1 - slice.Item2.Value) / chart.pie.TotalValue, radius);
+                Vector2 upperEdge = GetVector(slice.Item1 / chart.pie.TotalValue, radius);
                 if (lowerEdge.y != 0f)
                 {
                     float lowerX = y * lowerEdge.x / lowerEdge.y;
-                    if (lowerEdge.y * y > 0f && new Vector2(lowerX, y).magnitude < chart.radius)
+                    if (lowerEdge.y * y > 0f && new Vector2(lowerX, y).magnitude < radius)
                     {
                         yield return lowerX;
                     }
@@ -456,7 +551,7 @@ namespace VisibleWealth
                 if (upperEdge.y != 0f)
                 {
                     float upperX = y * upperEdge.x / upperEdge.y;
-                    if (upperEdge.y * y > 0f && new Vector2(upperX, y).magnitude < chart.radius)
+                    if (upperEdge.y * y > 0f && new Vector2(upperX, y).magnitude < radius)
                     {
                         yield return upperX;
                     }
@@ -519,7 +614,64 @@ namespace VisibleWealth
             return new Vector2(x, y);
         }
 
-        private static long GetState(IEnumerable<WealthNode> nodes) => nodes.Sum(n => GetNodeState(n)) + Dialog_WealthBreakdown.Search.filter.Text.GetHashCode();
+        private static Dictionary<int, HashSet<float>> CalculateSiblingEdgeFractions(Pie<WealthNode> pie)
+        {
+            Dictionary<int, HashSet<float>> fractions = new Dictionary<int, HashSet<float>>();
+            HashSet<WealthNode> visitedNodes = new HashSet<WealthNode>();
+            foreach (Tuple<float, WealthNode> slice in pie.Slices)
+            {
+                CalculateSiblingEdgeFractionsRecursive(pie, slice.Item2, fractions, visitedNodes);
+            }
+            foreach (int level in fractions.Keys)
+            {
+                Debug.Log(level + ": " + string.Join(", ", fractions[level]));
+            }
+            return fractions;
+        }
+
+        private static void CalculateSiblingEdgeFractionsRecursive(Pie<WealthNode> pie, WealthNode node, Dictionary<int, HashSet<float>> fractions, HashSet<WealthNode> visitedNodes)
+        {
+            if (!visitedNodes.Contains(node))
+            {
+                if (!pie.Contains(node))
+                {
+                    if (!fractions.ContainsKey(node.level))
+                    {
+                        fractions[node.level] = new HashSet<float>() { 0f };
+                    }
+                    float effectiveFraction = GetEffectiveFraction(node, pie);
+                    if (effectiveFraction < 1f)
+                    {
+                        fractions[node.level].Add(effectiveFraction);
+                    }
+                    fractions[node.level].Add(effectiveFraction - node.Value / pie.TotalValue);
+                }
+                if (node.parent != null)
+                {
+                    CalculateSiblingEdgeFractionsRecursive(pie, node.parent, fractions, visitedNodes);
+                }
+            }
+            visitedNodes.Add(node);
+        }
+
+        private static float GetEffectiveFraction(WealthNode node, Pie<WealthNode> pie)
+        {
+            float? fraction = pie.GetFraction(node);
+            if (fraction.HasValue)
+            {
+                return fraction.Value;
+            }
+            else if (!node.IsLeafNode)
+            {
+                return GetEffectiveFraction(node.Children.Last(), pie);
+            }
+            else
+            {
+                throw new ArgumentException("No descendant of node " + node.Text + " found in pie.");
+            }
+        }
+
+        private static long GetState(IEnumerable<WealthNode> nodes) => nodes.Sum(n => GetNodeState(n)) + Dialog_WealthBreakdown.Search.filter.Text.GetHashCode() + (int)VisibleWealthSettings.PieStyle * 3678 + (VisibleWealthSettings.RaidPointMode ? -2172368 : 123);
 
         private static long GetNodeState(WealthNode node)
         {

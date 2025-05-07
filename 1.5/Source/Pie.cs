@@ -25,6 +25,8 @@ namespace VisibleWealth
 
         public IEnumerable<Tuple<float, T>> Slices => slices;
 
+        public bool Contains(T flavor) => slices.Any(s => s.Item2.Equals(flavor));
+
         public float TotalValue => slices.Last().Item1;
 
         public T GetSlice(float fraction)
@@ -44,6 +46,19 @@ namespace VisibleWealth
                 }
             }
             return slices[upper].Item2;
+        }
+
+        public float? GetFraction(T flavor)
+        {
+            float? match = slices.FirstOrDefault(s => s.Item2.Equals(flavor))?.Item1;
+            if (match != null)
+            {
+                return match.Value / TotalValue;
+            }
+            else
+            {
+                return null;
+            }
         }
     }
 }

@@ -15,6 +15,11 @@ namespace VisibleWealth
 
         }
 
+        public virtual void OnMouseNotOver(IEnumerable<WealthNode> rootNodes)
+        {
+
+        }
+
         public virtual void OnClick(Vector2 pos, Rect outRect, Rect viewRect, IEnumerable<WealthNode> rootNodes)
         {
 

@@ -3,8 +3,10 @@
 	<VisibleWealth_WealthBreakdown>Wealth breakdown</VisibleWealth_WealthBreakdown>
 	<VisibleWealth_Calculating>Calculating</VisibleWealth_Calculating>
 	<VisibleWealth_TotalWealth>Total wealth: ${0}</VisibleWealth_TotalWealth>
-	<VisibleWealth_FlatPie>Flat</VisibleWealth_FlatPie>
-	<VisibleWealth_NestedPie>Nested</VisibleWealth_NestedPie>
+	<VisibleWealth_ListStyle>List style</VisibleWealth_ListStyle>
+	<VisibleWealth_PieStyle>Pie chart style</VisibleWealth_PieStyle>
+	<VisibleWealth_Flat>Flat</VisibleWealth_Flat>
+	<VisibleWealth_Nested>Nested</VisibleWealth_Nested>
 	<VisibleWealth_WealthItems>Items wealth</VisibleWealth_WealthItems>
 	<VisibleWealth_WealthBuildings>Buildings wealth</VisibleWealth_WealthBuildings>
 	<VisibleWealth_WealthPawns>Pawns wealth</VisibleWealth_WealthPawns>
@@ -14,14 +16,21 @@
 	<VisibleWealth_Mechs>Mech</VisibleWealth_Mechs>
 	<VisibleWealth_Mutants>Mutant</VisibleWealth_Mutants>
 	<VisibleWealth_Ghouls>Ghoul</VisibleWealth_Ghouls>
-	<VisibleWealth_SortBy>Sort by {0}</VisibleWealth_SortBy>
+	<VisibleWealth_Enabled>On</VisibleWealth_Enabled>
+	<VisibleWealth_Disabled>Off</VisibleWealth_Disabled>
+	<VisibleWealth_SortBy>Sort by</VisibleWealth_SortBy>
 	<VisibleWealth_SortByName>name</VisibleWealth_SortByName>
 	<VisibleWealth_SortByValue>value</VisibleWealth_SortByValue>
 	<VisibleWealth_SortDirectionAscending>Sort ascending</VisibleWealth_SortDirectionAscending>
-	<VisibleWealth_SortDirectionDescending>Sort descending</VisibleWealth_SortDirectionDescending>
+	<VisibleWealth_RaidPointMode>Raid point mode</VisibleWealth_RaidPointMode>
 	<VisibleWealth_PercentOfTotal>Show percent of total wealth</VisibleWealth_PercentOfTotal>
 	<VisibleWealth_PercentOfCategory>Show percent of parent category</VisibleWealth_PercentOfCategory>
 	<VisibleWealth_PercentOfNone>Do not show percentages</VisibleWealth_PercentOfNone>
+	<VisibleWealth_ClickForInfo>Click for more information.</VisibleWealth_ClickForInfo>
 	<VisibleWealth_ClickToExpand>Click to expand.</VisibleWealth_ClickToExpand>
 	<VisibleWealth_ClickToCollapse>Collapse {0}</VisibleWealth_ClickToCollapse>
+	<VisibleWealth_CollapseAll>Collapse all</VisibleWealth_CollapseAll>
+	<VisibleWealth_PlaySettingsButton>Show button in play settings (bottom right corner)</VisibleWealth_PlaySettingsButton>
+	<VisibleWealth_MainButton>Show main button (bottom bar)</VisibleWealth_MainButton>
+	<VisibleWealth_OpenKeyBindings>Configure Wealth Breakdown shortcut key</VisibleWealth_OpenKeyBindings>
 </LanguageData>

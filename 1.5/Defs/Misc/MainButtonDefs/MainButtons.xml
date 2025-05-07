@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8" ?>
+
+<Defs>
+
+  <MainButtonDef>
+    <defName>VisibleWealth_MainButton</defName>
+    <label>Wealth breakdown</label>
+    <description>View detailed breakdown of colony wealth.</description>
+    <workerClass>VisibleWealth.MainButtonWorker_WealthBreakdown</workerClass>
+    <order>81</order>
+    <minimized>true</minimized>
+    <iconPath>UI/Buttons/WealthBreakdown</iconPath>
+	<buttonVisible>false</buttonVisible>
+  </MainButtonDef>
+
+</Defs>
