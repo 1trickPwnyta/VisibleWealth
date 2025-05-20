@@ -24,7 +24,7 @@ namespace VisibleWealth
         private readonly int quantity;
         private readonly float value;
 
-        public WealthNode_Floor(Map map, int level, TerrainDef def) : base(map, level)
+        public WealthNode_Floor(WealthNode parent, Map map, int level, TerrainDef def) : base(parent, map, level)
         {
             this.def = def;
             quantity = GetTerrainCache(map).Where(d => d == def).Count();
@@ -37,14 +37,16 @@ namespace VisibleWealth
 
         public override bool Visible => quantity > 0 && value > 0f;
 
-        public override float Value => value;
+        public override float RawValue => value;
 
-        public override float DrawIcon(Rect rect)
+        public override float ValueFactor => VisibleWealthSettings.RaidPointMode ? 0.5f : 1f;
+
+    public override float DrawIcon(Rect rect)
         {
             Widgets.DefIcon(rect, def);
             return IconSize.x + 2f;
         }
 
-        public override Def InfoDef => def;
+        protected override Def InfoDef => def;
     }
 }

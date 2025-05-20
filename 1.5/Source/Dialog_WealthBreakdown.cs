@@ -1,27 +1,39 @@
 ﻿using RimWorld;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using Verse;
 using Verse.Sound;
 
 namespace VisibleWealth
 {
+    [StaticConstructorOnStartup]
     public class Dialog_WealthBreakdown : Window
     {
+        private static readonly float chartWidth = 600f;
         private static Vector2 scrollPosition;
         private static float y;
+        private static readonly ChartOption chartTypeOption = new ChartOption_Def<ChartDef>(() => VisibleWealthSettings.ChartType, option => VisibleWealthSettings.ChartType = option, null, option => option.Icon);
         public static QuickSearchWidget Search = new QuickSearchWidget();
 
-        private readonly Map map;
-        private readonly WealthNode itemsNode;
-        private readonly WealthNode buildingsNode;
-        private readonly WealthNode pawnsNode;
-        private readonly WealthNode pocketMapsNode;
-
-        public override Vector2 InitialSize => new Vector2(WealthNode.Size.x + 20f + Window.StandardMargin * 2, 600f);
-
-        public Dialog_WealthBreakdown()
+        public static void Open()
         {
+            LongEventHandler.QueueLongEvent(() => Find.WindowStack.Add(new Dialog_WealthBreakdown()), "VisibleWealth_Calculating", false, null);
+        }
+
+        public static Dialog_WealthBreakdown Current { get; private set; }
+
+        private readonly Map map;
+        public readonly List<WealthNode> rootNodes;
+
+        public float TotalWealth => VisibleWealthSettings.RaidPointMode ? map.wealthWatcher.WealthTotal - map.wealthWatcher.WealthBuildings / 2f : map.wealthWatcher.WealthTotal;
+
+        public override Vector2 InitialSize => new Vector2(chartWidth + 20f + StandardMargin * 2, 600f);
+
+        private Dialog_WealthBreakdown()
+        {
+            Current = this;
+
             doCloseButton = true;
             doCloseX = true;
             closeOnClickedOutside = true;
@@ -32,61 +44,73 @@ namespace VisibleWealth
 
             map = Find.CurrentMap;
             map.wealthWatcher.ForceRecount();
-            itemsNode = new WealthNode_WealthCategory(map, 0, WealthCategory.Items);
-            buildingsNode = new WealthNode_WealthCategory(map, 0, WealthCategory.Buildings);
-            pawnsNode = new WealthNode_WealthCategory(map, 0, WealthCategory.Pawns);
-            pocketMapsNode = new WealthNode_WealthCategory(map, 0, WealthCategory.PocketMaps);
+            rootNodes = WealthNode.MakeRootNodes(map).ToList();
 
             Search.Reset();
         }
 
+        public override void PostOpen()
+        {
+            SoundDefOf.TabOpen.PlayOneShot(null);
+        }
+
+        public override void PostClose()
+        {
+            VisibleWealthMod.Settings.Write();
+            ChartWorker.CleanupAll();
+            Current = null;
+        }
+
         public override void DoWindowContents(Rect inRect)
         {
-            Rect titleRect = new Rect(inRect.x, inRect.y, inRect.width, 45f);
-            Text.Font = GameFont.Medium;
-            Widgets.Label(titleRect, "VisibleWealth_WealthBreakdown".Translate());
-            Text.Font = GameFont.Small;
-
-            Rect totalWealthRect = new Rect(inRect.x, inRect.y + 45f, inRect.width, 30f);
-            Widgets.Label(totalWealthRect, "VisibleWealth_TotalWealth".Translate(map.wealthWatcher.WealthTotal.ToString("F0")));
-
-            Rect searchRect = new Rect(inRect.xMax - Window.QuickSearchSize.x, inRect.y + 45f, Window.QuickSearchSize.x, Window.QuickSearchSize.y);
-            Search.OnGUI(searchRect);
-
-            Rect outRect = new Rect(inRect.x, inRect.y + 45f + 30f + 10f, inRect.width, inRect.height - 45f - 30f - 10f - 24f - 10f - Window.CloseButSize.y - 10f);
-            Rect viewRect = new Rect(0f, 0f, WealthNode.Size.x, y);
-            Widgets.BeginScrollView(outRect, ref scrollPosition, viewRect);
-            y = 0f;
-
-            itemsNode.Draw(ref y);
-            buildingsNode.Draw(ref y);
-            pawnsNode.Draw(ref y);
-            pocketMapsNode.Draw(ref y);
-
-            Widgets.EndScrollView();
-
-            Rect optionsRect = new Rect(inRect.x, inRect.yMax - Window.CloseButSize.y - 10f - 24f, inRect.width, 24f);
-            Rect sortByRect = new Rect(optionsRect.x, optionsRect.y, 24f, optionsRect.height);
-            if (Widgets.ButtonImage(sortByRect, WealthNode.SortBy.GetIcon(), true, "VisibleWealth_SortBy".Translate(WealthNode.SortBy.GetLabel())))
+            if (Current == this)
             {
-                List<FloatMenuOption> options = new List<FloatMenuOption>();
-                foreach (SortBy sortBy in typeof(SortBy).GetEnumValues())
+                Rect titleRect = new Rect(inRect.x, inRect.y, inRect.width, 45f);
+                Text.Font = GameFont.Medium;
+                Widgets.Label(titleRect, "VisibleWealth_WealthBreakdown".Translate());
+                Text.Font = GameFont.Small;
+
+                Rect totalWealthRect = new Rect(inRect.x, inRect.y + 45f, inRect.width, 30f);
+                Widgets.Label(totalWealthRect, "VisibleWealth_TotalWealth".Translate(TotalWealth.ToString("F0")));
+
+                Rect searchRect = new Rect(inRect.xMax - QuickSearchSize.x, inRect.y + 45f, QuickSearchSize.x, QuickSearchSize.y);
+                Search.OnGUI(searchRect);
+
+                Rect outRect = new Rect(inRect.x, inRect.y + 45f + 30f + 10f, inRect.width, inRect.height - 45f - 30f - 10f - 24f - 10f - CloseButSize.y - 10f);
+                Rect viewRect = new Rect(0f, 0f, chartWidth, y);
+                Widgets.BeginScrollView(outRect, ref scrollPosition, viewRect);
+                y = 0f;
+                VisibleWealthSettings.ChartType.Worker.Draw(outRect, viewRect, ref y, rootNodes);
+                Vector2 mousePos = GUIUtility.ScreenToGUIPoint(Input.mousePosition);
+                mousePos.y = outRect.height - mousePos.y;
+                if (Mouse.IsOver(viewRect))
                 {
-                    options.Add(new FloatMenuOption("VisibleWealth_SortBy".Translate(sortBy.GetLabel()), () =>
-                    {
-                        WealthNode.SortBy = sortBy;
-                    }));
+                    VisibleWealthSettings.ChartType.Worker.OnMouseOver(mousePos, outRect, viewRect, rootNodes);
                 }
-                Find.WindowStack.Add(new FloatMenu(options));
+                else
+                {
+                    VisibleWealthSettings.ChartType.Worker.OnMouseNotOver(rootNodes);
+                }
+                if (Widgets.ButtonInvisible(viewRect, false))
+                {
+                    VisibleWealthSettings.ChartType.Worker.OnClick(mousePos, outRect, viewRect, rootNodes);
+                }
+                Widgets.EndScrollView();
+
+                Rect optionsRect = new Rect(inRect.x, inRect.yMax - CloseButSize.y - 10f - 24f, inRect.width, 24f);
+
+                Rect chartTypeRect = new Rect(optionsRect.x, optionsRect.y, 24f, optionsRect.height);
+                chartTypeOption.DoOption(chartTypeRect);
+
+                Widgets.DrawLine(new Vector2(chartTypeRect.xMax + 12f, optionsRect.y), new Vector2(chartTypeRect.xMax + 12f, optionsRect.yMax), Color.gray, 1f);
+
+                Rect optionRect = new Rect(optionsRect.x + 48f, optionsRect.y, 24f, optionsRect.height);
+                foreach (ChartOption option in VisibleWealthSettings.ChartType.Worker.Options)
+                {
+                    option.DoOption(optionRect);
+                    optionRect.x += optionRect.width;
+                }
             }
-            Rect sortDirectionRect = new Rect(optionsRect.x + 24f, optionsRect.y, 24f, optionsRect.height);
-            if (Widgets.ButtonImage(sortDirectionRect, SortByUtility.SortDirectionIcon, true, WealthNode.SortAscending ? "VisibleWealth_SortDirectionAscending".Translate() : "VisibleWealth_SortDirectionDescending".Translate()))
-            {
-                WealthNode.SortAscending = !WealthNode.SortAscending;
-                (WealthNode.SortAscending ? SoundDefOf.Tick_High : SoundDefOf.Tick_Low).PlayOneShot(null);
-            }
-            Rect sortDirectionCheckRect = new Rect(sortDirectionRect.x + sortDirectionRect.width / 2, sortDirectionRect.y, sortDirectionRect.width / 2, sortDirectionRect.height / 2);
-            GUI.DrawTexture(sortDirectionCheckRect, WealthNode.SortAscending ? Widgets.CheckboxOnTex : Widgets.CheckboxOffTex);
         }
     }
 }

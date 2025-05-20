@@ -19,8 +19,6 @@ namespace VisibleWealth
         private static readonly Texture2D sortByValueIcon = ContentFinder<Texture2D>.Get("UI/Sort/WealthBreakdown_SortByValue");
 
         public static readonly Texture2D SortDirectionIcon = ContentFinder<Texture2D>.Get("UI/Sort/WealthBreakdown_SortDirection");
-        public static readonly string SortDirectionAscending = "VisibleWealth_SortDirectionAscending".Translate();
-        public static readonly string SortDirectionDescending = "VisibleWealth_SortDirectionDescending".Translate();
 
         public static string GetLabel(this SortBy sortBy)
         {

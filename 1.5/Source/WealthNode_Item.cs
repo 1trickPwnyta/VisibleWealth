@@ -13,7 +13,7 @@ namespace VisibleWealth
         private readonly int quantity;
         private readonly float value;
 
-        public WealthNode_Item(Map map, int level, ThingDef def) : base(map, level)
+        public WealthNode_Item(WealthNode parent, Map map, int level, ThingDef def) : base(parent, map, level)
         {
             this.def = def;
             List<Thing> things = new List<Thing>();
@@ -33,7 +33,7 @@ namespace VisibleWealth
 
         public override bool Visible => quantity > 0 && value > 0f;
 
-        public override float Value => value;
+        public override float RawValue => value;
 
         public override float DrawIcon(Rect rect)
         {
@@ -41,6 +41,6 @@ namespace VisibleWealth
             return IconSize.x + 2f;
         }
 
-        public override Def InfoDef => def;
+        protected override Def InfoDef => def;
     }
 }

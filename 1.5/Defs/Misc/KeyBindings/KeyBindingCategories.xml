@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8" ?>
+
+<Defs>
+
+  <KeyBindingCategoryDef>
+    <defName>VisibleWealth</defName>
+    <label>Visible Wealth</label>
+    <description>Hotkeys for the Visible Wealth mod.</description>
+    <isGameUniversal>false</isGameUniversal>
+  </KeyBindingCategoryDef>
+
+</Defs>

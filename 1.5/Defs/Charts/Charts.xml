@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" ?>
+
+<Defs>
+
+  <VisibleWealth.ChartDef>
+    <defName>List</defName>
+    <label>list</label>
+	<icon>UI/Options/WealthBreakdown_List</icon>
+	<workerClass>VisibleWealth.ChartWorker_List</workerClass>
+  </VisibleWealth.ChartDef>
+  
+  <VisibleWealth.ChartDef>
+    <defName>PieChart</defName>
+    <label>pie chart</label>
+	<icon>UI/Options/WealthBreakdown_PieChart</icon>
+	<workerClass>VisibleWealth.ChartWorker_PieChart</workerClass>
+  </VisibleWealth.ChartDef>
+
+</Defs>

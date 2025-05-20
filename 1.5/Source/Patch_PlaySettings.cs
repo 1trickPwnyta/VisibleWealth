@@ -14,11 +14,23 @@ namespace VisibleWealth
 
         public static void Postfix(WidgetRow row, bool worldView)
         {
-            if (!worldView)
+            if (VisibleWealthSettings.PlaySettingsButton && !worldView)
             {
-                if (row.ButtonIcon(WealthBreakdownIcon, "VisibleWealth_WealthBreakdown".Translate()))
+                string keyCodeText = "";
+                KeyCode keyCode = KeyPrefs.KeyPrefsData.GetBoundKeyCode(KeyBindingUtility.WealthBreakdown, KeyPrefs.BindingSlot.A);
+                KeyCode keyCodeShift = KeyPrefs.KeyPrefsData.GetBoundKeyCode(KeyBindingUtility.WealthBreakdownShift, KeyPrefs.BindingSlot.A);
+                if (keyCode != KeyCode.None)
                 {
-                    Find.WindowStack.Add(new Dialog_WealthBreakdown());
+                    keyCodeText += "HotKeyTip".Translate() + ": " + keyCode.ToStringReadable() + "\n\n";
+                }
+                else if (keyCodeShift != KeyCode.None)
+                {
+                    keyCodeText += "HotKeyTip".Translate() + ": " + KeyCode.LeftShift.ToStringReadable() + " + " + keyCodeShift.ToStringReadable() + "\n\n";
+                }
+
+                if (row.ButtonIcon(WealthBreakdownIcon, keyCodeText + "VisibleWealth_WealthBreakdown".Translate()))
+                {
+                    Dialog_WealthBreakdown.Open();
                 }
             }
         }

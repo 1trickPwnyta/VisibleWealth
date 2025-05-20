@@ -9,7 +9,7 @@ namespace VisibleWealth
         private readonly Pawn pawn;
         private readonly float value;
 
-        public WealthNode_Pawn(Map map, int level, Pawn pawn) : base(map, level)
+        public WealthNode_Pawn(WealthNode parent, Map map, int level, Pawn pawn) : base(parent, map, level)
         {
             this.pawn = pawn;
             value = pawn.MarketValue * (pawn.IsSlave ? 0.75f : 1f);
@@ -21,7 +21,7 @@ namespace VisibleWealth
 
         public override bool Visible => true;
 
-        public override float Value => value;
+        public override float RawValue => value;
 
         public override float DrawIcon(Rect rect)
         {
@@ -29,6 +29,6 @@ namespace VisibleWealth
             return IconSize.x + 2f;
         }
 
-        public override Thing InfoThing => pawn;
+        protected override Thing InfoThing => pawn;
     }
 }
