@@ -44,7 +44,7 @@ namespace VisibleWealth
             }
         }
 
-        private static void ColorRoots(IEnumerable<WealthNode> rootNodes)
+        public static void ColorRoots(IEnumerable<WealthNode> rootNodes)
         {
             List<WealthNode> nodes = rootNodes.Where(n => n.Visible).ToList();
             for (int i = 0; i < nodes.Count; i++)

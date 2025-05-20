@@ -26,6 +26,7 @@
 	<VisibleWealth_PercentOfTotal>Show percent of total wealth</VisibleWealth_PercentOfTotal>
 	<VisibleWealth_PercentOfCategory>Show percent of parent category</VisibleWealth_PercentOfCategory>
 	<VisibleWealth_PercentOfNone>Do not show percentages</VisibleWealth_PercentOfNone>
+	<VisibleWealth_RerollColors>Randomize colors</VisibleWealth_RerollColors>
 	<VisibleWealth_ClickForInfo>Click for more information.</VisibleWealth_ClickForInfo>
 	<VisibleWealth_ClickToExpand>Click to expand.</VisibleWealth_ClickToExpand>
 	<VisibleWealth_ClickToCollapse>Collapse {0}</VisibleWealth_ClickToCollapse>

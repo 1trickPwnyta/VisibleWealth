@@ -10,6 +10,7 @@ namespace VisibleWealth
 {
     public abstract class ChartOption
     {
+        private static readonly Texture2D RerollColorsIcon = ContentFinder<Texture2D>.Get("UI/Options/WealthBreakdown_RerollColors");
         private static readonly Texture2D RaidPointModeIcon = ContentFinder<Texture2D>.Get("UI/Options/WealthBreakdown_RaidPointMode");
 
         public abstract void DoOption(Rect rect);
@@ -21,6 +22,8 @@ namespace VisibleWealth
                 node.Open = false;
             }
         }, () => WealthNode.GetAllNodes(Dialog_WealthBreakdown.Current.rootNodes).Any(n => n.Open), "VisibleWealth_CollapseAll".Translate(), TexButton.Reveal);
+
+        public static readonly ChartOption RerollColors = new ChartOption_Button(() => WealthNode.ColorRoots(Dialog_WealthBreakdown.Current.rootNodes), () => true, "VisibleWealth_RerollColors".Translate(), RerollColorsIcon);
 
         public static readonly ChartOption PercentOf = new ChartOption_Enum<PercentOf>(() => VisibleWealthSettings.PercentOf, option => VisibleWealthSettings.PercentOf = option, null, option => option.GetLabel(), option => option.GetIcon());
 
@@ -101,6 +104,10 @@ namespace VisibleWealth
                 {
                     action();
                     SoundDefOf.Click.PlayOneShot(null);
+                }
+                else
+                {
+                    SoundDefOf.ClickReject.PlayOneShot(null);
                 }
             }
         }

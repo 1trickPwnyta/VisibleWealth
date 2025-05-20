@@ -38,6 +38,7 @@ namespace VisibleWealth
         private static readonly IEnumerable<ChartOption> options = new ChartOption[]
         {
             new ChartOption_Enum<PieStyle>(() => VisibleWealthSettings.PieStyle, option => VisibleWealthSettings.PieStyle = option, "VisibleWealth_PieStyle".Translate(), option => option.GetLabel(), option => option.GetIcon()),
+            ChartOption.RerollColors, 
             ChartOption.CollapseAll, 
             ChartOption.PercentOf,
             ChartOption.RaidPointMode
@@ -676,7 +677,7 @@ namespace VisibleWealth
         private static long GetNodeState(WealthNode node)
         {
             int code = node.GetHashCode();
-            long state = code * 2950 * (node.Open ? 1 : -1) + code * 790372 * (node == mouseOverNode ? 1 : -1);
+            long state = code * 2950 * (node.Open ? 1 : -1) + code * 790372 * (node == mouseOverNode ? 1 : -1) + node.ChartColor.GetHashCode();
             foreach (WealthNode child in node.Children)
             {
                 state += GetNodeState(child);
