@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8" ?>
+
+<Defs>
+
+  <KeyBindingDef Name="VisibleWealth" Abstract="true">
+    <category>VisibleWealth</category>
+  </KeyBindingDef>
+
+  <KeyBindingDef ParentName="VisibleWealth">
+    <defName>VisibleWealth_WealthBreakdown</defName>
+    <label>Wealth breakdown</label>
+  </KeyBindingDef>
+  
+  <KeyBindingDef ParentName="VisibleWealth">
+    <defName>VisibleWealth_WealthBreakdownShift</defName>
+    <label>Wealth breakdown (Hold shift)</label>
+	<defaultKeyCodeA>Alpha4</defaultKeyCodeA>
+  </KeyBindingDef>
+
+</Defs>
