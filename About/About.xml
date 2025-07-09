@@ -3,7 +3,7 @@
 	<name>Visible Wealth</name>
 	<author>1trickPwnyta</author>
 	<packageId>visiblewealth.1trickPwnyta</packageId>
-	<modVersion>1.1.1</modVersion>
+	<modVersion>1.1.2</modVersion>
 	<supportedVersions>
 		<li>1.5</li>
 		<li>1.6</li>
@@ -16,6 +16,7 @@ You can visualize your wealth as a list or as a pie chart, each with options to 
 There are three ways to open the wealth breakdown window. By default, you can click the $ symbol in the bottom right corner of your screen (same area as the roof overlay button etc.) or you can press Shift+4 (like you're typing a $, and this shortcut key can be changed in the settings). In the settings you can also enable a main button that appears at the bottom of your screen near the History tab button.
 
 === Updates ===
+07/09/2025: Fix bug when using keyboard shortcut to open wealth breakdown when it's already open
 06/11/2025: Updated to 1.6
 05/20/2025: Add pie chart and many more options
 

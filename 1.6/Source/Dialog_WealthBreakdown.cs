@@ -18,7 +18,16 @@ namespace VisibleWealth
 
         public static void Open()
         {
-            LongEventHandler.QueueLongEvent(() => Find.WindowStack.Add(new Dialog_WealthBreakdown()), "VisibleWealth_Calculating", false, null);
+            if (Current == null)
+            {
+                LongEventHandler.QueueLongEvent(() =>
+                {
+                    if (Current == null)
+                    {
+                        Find.WindowStack.Add(new Dialog_WealthBreakdown());
+                    }
+                }, "VisibleWealth_Calculating", false, null);
+            }
         }
 
         public static Dialog_WealthBreakdown Current { get; private set; }
