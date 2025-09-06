@@ -92,6 +92,7 @@
     <Compile Include="WealthNode.cs" />
     <Compile Include="WealthNode_Building.cs" />
     <Compile Include="WealthNode_BuildingCategory.cs" />
+    <Compile Include="WealthNode_BuildingStuff.cs" />
     <Compile Include="WealthNode_Floor.cs" />
     <Compile Include="WealthNode_Item.cs" />
     <Compile Include="WealthNode_Pawn.cs" />

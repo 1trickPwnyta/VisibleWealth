@@ -256,7 +256,9 @@ namespace VisibleWealth
 
         protected virtual Thing InfoThing { get; }
 
-        public void ShowInfoCard() => Find.WindowStack.Add(InfoThing != null ? new Dialog_InfoCard(InfoThing) : new Dialog_InfoCard(InfoDef));
+        protected virtual ThingDef InfoStuff { get; }
+
+        public void ShowInfoCard() => Find.WindowStack.Add(InfoThing != null ? new Dialog_InfoCard(InfoThing) : InfoStuff != null ? new Dialog_InfoCard(InfoDef as ThingDef, InfoStuff) : new Dialog_InfoCard(InfoDef));
 
         public virtual void OnOpen() { }
 
@@ -297,7 +299,7 @@ namespace VisibleWealth
                     Rect infoRect = new Rect(rect.xMax - IconSize.x, rect.y + (rect.height - IconSize.y) / 2, IconSize.x, IconSize.y);
                     if (Widgets.ButtonImage(infoRect, TexButton.Info))
                     {
-                        Find.WindowStack.Add(InfoThing != null ? new Dialog_InfoCard(InfoThing) : new Dialog_InfoCard(InfoDef));
+                        ShowInfoCard();
                     }
                 }
 
