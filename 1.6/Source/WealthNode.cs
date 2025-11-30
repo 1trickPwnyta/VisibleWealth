@@ -14,6 +14,7 @@ namespace VisibleWealth
         public static readonly float VerticalSpacing = 2f;
         public static readonly Color BackgroundColor = new Color(0.15f, 0.15f, 0.15f);
         public static readonly float Indent = 20f;
+        public static readonly HashSet<Def> usedDefs = new HashSet<Def>();
 
         private bool open;
         public readonly int level;
@@ -22,6 +23,7 @@ namespace VisibleWealth
 
         public static IEnumerable<WealthNode> MakeRootNodes(Map map)
         {
+            usedDefs.Clear();
             WealthNode[] roots = new[]
             {
                 new WealthNode_WealthCategory(null, map, 0, WealthCategory.Items),

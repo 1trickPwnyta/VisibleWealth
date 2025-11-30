@@ -15,7 +15,13 @@ namespace VisibleWealth
         {
             this.def = def;
             subNodes.AddRange(def.childCategories.Select(d => new WealthNode_ResourceCategory(this, map, level + 1, d)));
-            subNodes.AddRange(def.childThingDefs.Select(d => new WealthNode_Item(this, map, level + 1, d)));
+            subNodes.AddRange(def.childThingDefs.Where(d =>
+            {
+                // Some mods put ThingDefs in multiple categories, but we don't want to count anything twice
+                bool used = usedDefs.Contains(d);
+                usedDefs.Add(d);
+                return !used;
+            }).Select(d => new WealthNode_Item(this, map, level + 1, d)));
             Open = openCategories.Contains(def);
         }
 
