@@ -18,6 +18,7 @@ namespace VisibleWealth
             subNodes.AddRange(def.childThingDefs.Where(d =>
             {
                 // Some mods put ThingDefs in multiple categories, but we don't want to count anything twice
+                HashSet<Def> usedDefs = MapRoot.usedDefsOnMap;
                 bool used = usedDefs.Contains(d);
                 usedDefs.Add(d);
                 return !used;

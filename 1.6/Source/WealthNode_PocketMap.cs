@@ -11,7 +11,7 @@ namespace VisibleWealth
         private readonly Map pocketMap;
         private readonly List<WealthNode> subNodes = new List<WealthNode>();
 
-        public WealthNode_PocketMap(WealthNode parent, Map map, int level, Map pocketMap) : base(parent, map, level)
+        public WealthNode_PocketMap(WealthNode parent, Map map, int level, Map pocketMap) : base(parent, map, level, true)
         {
             this.pocketMap = pocketMap;
             subNodes.AddRange(new[]

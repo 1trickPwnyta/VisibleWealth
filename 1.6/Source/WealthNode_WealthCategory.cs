@@ -13,7 +13,7 @@ namespace VisibleWealth
         private readonly WealthCategory category;
         private readonly List<WealthNode> subNodes = new List<WealthNode>();
 
-        public WealthNode_WealthCategory(WealthNode parent, Map map, int level, WealthCategory category) : base(parent, map, level)
+        public WealthNode_WealthCategory(WealthNode parent, Map map, int level, WealthCategory category, bool isMapRoot = false) : base(parent, map, level, isMapRoot)
         {
             this.category = category;
             switch (category)

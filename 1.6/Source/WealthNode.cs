@@ -14,21 +14,21 @@ namespace VisibleWealth
         public static readonly float VerticalSpacing = 2f;
         public static readonly Color BackgroundColor = new Color(0.15f, 0.15f, 0.15f);
         public static readonly float Indent = 20f;
-        public static readonly HashSet<Def> usedDefs = new HashSet<Def>();
 
         private bool open;
         public readonly int level;
         public readonly Map map;
         public readonly WealthNode parent;
+        public readonly bool isMapRoot;
+        public readonly HashSet<Def> usedDefsOnMap = new HashSet<Def>();
 
         public static IEnumerable<WealthNode> MakeRootNodes(Map map)
         {
-            usedDefs.Clear();
             WealthNode[] roots = new[]
             {
-                new WealthNode_WealthCategory(null, map, 0, WealthCategory.Items),
-                new WealthNode_WealthCategory(null, map, 0, WealthCategory.Buildings),
-                new WealthNode_WealthCategory(null, map, 0, WealthCategory.Pawns),
+                new WealthNode_WealthCategory(null, map, 0, WealthCategory.Items, true),
+                new WealthNode_WealthCategory(null, map, 0, WealthCategory.Buildings, true),
+                new WealthNode_WealthCategory(null, map, 0, WealthCategory.Pawns, true),
                 new WealthNode_WealthCategory(null, map, 0, WealthCategory.PocketMaps)
             };
             ColorRoots(roots);
@@ -94,11 +94,12 @@ namespace VisibleWealth
             }
         }
 
-        public WealthNode(WealthNode parent, Map map, int level)
+        public WealthNode(WealthNode parent, Map map, int level, bool isMapRoot = false)
         {
             this.parent = parent;
             this.map = map;
             this.level = level;
+            this.isMapRoot = isMapRoot;
         }
 
         private void SetChartColor(Color color, Color colorBackup)
@@ -187,6 +188,8 @@ namespace VisibleWealth
         }
 
         public bool IsLeafNode => Children.Count() == 0;
+
+        public WealthNode MapRoot => isMapRoot ? this : parent?.MapRoot;
 
         public IEnumerable<WealthNode> LeafNodes
         {
