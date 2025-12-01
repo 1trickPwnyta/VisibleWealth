@@ -89,7 +89,12 @@ namespace VisibleWealth
                 Rect viewRect = new Rect(0f, 0f, chartWidth, y);
                 Widgets.BeginScrollView(outRect, ref scrollPosition, viewRect);
                 y = 0f;
-                VisibleWealthSettings.ChartType.Worker.Draw(outRect, viewRect, ref y, rootNodes);
+                
+                if (rootNodes.Any(n => n.Value > 0f))
+                {
+                    VisibleWealthSettings.ChartType.Worker.Draw(outRect, viewRect, ref y, rootNodes);
+                }
+                
                 Vector2 mousePos = GUIUtility.ScreenToGUIPoint(Input.mousePosition);
                 mousePos.y = outRect.height - mousePos.y;
                 if (Mouse.IsOver(viewRect))
