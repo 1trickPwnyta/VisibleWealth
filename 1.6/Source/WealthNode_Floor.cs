@@ -15,7 +15,7 @@ namespace VisibleWealth
         {
             if (!TerrainCache.ContainsKey(map))
             {
-                TerrainCache[map] = map.AllCells.Where(c => !c.Fogged(map)).Select(c => c.GetTerrain(map)).ToList();
+                TerrainCache[map] = map.AllCells.Where(c => !c.Fogged(map)).SelectMany(c => new[] { map.terrainGrid.TopTerrainAt(c), map.terrainGrid.FoundationAt(c) }).Where(t => t != null && ((float[])typeof(WealthWatcher).Field("cachedTerrainMarketValue").GetValue(map.wealthWatcher))[t.index] > 0f).ToList();
             }
             return TerrainCache[map];
         }
@@ -41,7 +41,7 @@ namespace VisibleWealth
 
         public override float ValueFactor => VisibleWealthSettings.RaidPointMode ? 0.5f : 1f;
 
-    public override float DrawIcon(Rect rect)
+        public override float DrawIcon(Rect rect)
         {
             Widgets.DefIcon(rect, def);
             return IconSize.x + 2f;

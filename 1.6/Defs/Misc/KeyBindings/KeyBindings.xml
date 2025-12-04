@@ -16,5 +16,10 @@
     <label>Wealth breakdown (Hold shift)</label>
 	<defaultKeyCodeA>Alpha4</defaultKeyCodeA>
   </KeyBindingDef>
+  
+  <KeyBindingDef ParentName="VisibleWealth">
+    <defName>VisibleWealth_WealthOverlay</defName>
+    <label>Toggle wealth overlay</label>
+  </KeyBindingDef>
 
 </Defs>

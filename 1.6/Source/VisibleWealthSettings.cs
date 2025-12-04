@@ -16,6 +16,8 @@ namespace VisibleWealth
         public static bool RaidPointMode = false;
         public static bool PlaySettingsButton = true;
         public static bool MainButton = false;
+        public static bool WealthOverlay = true;
+        public static bool WealthOverlayPause = true;
 
         private static readonly MainButtonDef mainButtonDef = DefDatabase<MainButtonDef>.GetNamed("VisibleWealth_MainButton");
 
@@ -28,6 +30,14 @@ namespace VisibleWealth
             listing.CheckboxLabeled("VisibleWealth_PlaySettingsButton".Translate(), ref PlaySettingsButton);
             listing.CheckboxLabeled("VisibleWealth_MainButton".Translate(), ref MainButton);
             mainButtonDef.buttonVisible = MainButton;
+
+            listing.Gap();
+
+            listing.CheckboxLabeled("VisibleWealth_WealthOverlayPause".Translate(), ref WealthOverlayPause, "VisibleWealth_WealthOverlayPauseTip".Translate());
+            listing.CheckboxLabeled("VisibleWealth_WealthOverlay".Translate(), ref WealthOverlay);
+
+            listing.Gap();
+            
             if (listing.ButtonText("VisibleWealth_OpenKeyBindings".Translate(), null, 0.35f))
             {
                 Dialog_KeyBindings dialog = new Dialog_KeyBindings();
@@ -69,6 +79,8 @@ namespace VisibleWealth
             Scribe_Values.Look(ref RaidPointMode, "RaidPointMode", false);
             Scribe_Values.Look(ref PlaySettingsButton, "PlaySettingsButton", true);
             Scribe_Values.Look(ref MainButton, "MainButton", false);
+            Scribe_Values.Look(ref WealthOverlay, "WealthOverlay", true);
+            Scribe_Values.Look(ref WealthOverlayPause, "WealthOverlayPause", true);
             if (Scribe.mode == LoadSaveMode.PostLoadInit)
             {
                 mainButtonDef.buttonVisible = MainButton;

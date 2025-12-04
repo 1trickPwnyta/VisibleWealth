@@ -75,6 +75,9 @@
     <Compile Include="Dialog_WealthBreakdown.cs" />
     <Compile Include="KeyBindingUtility.cs" />
     <Compile Include="MainButtonWorker_WealthBreakdown.cs" />
+    <Compile Include="Patch_GlobalControls.cs" />
+    <Compile Include="Patch_Map.cs" />
+    <Compile Include="Patch_MapInterface.cs" />
     <Compile Include="Patch_PlaySettings.cs" />
     <Compile Include="Patch_UIRoot_Play.cs" />
     <Compile Include="PawnCategory.cs" />
@@ -102,6 +105,7 @@
     <Compile Include="WealthNode_PocketMap.cs" />
     <Compile Include="WealthNode_WealthCategory.cs" />
     <Compile Include="WealthNode_ResourceCategory.cs" />
+    <Compile Include="WealthOverlay.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

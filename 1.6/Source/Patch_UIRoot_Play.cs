@@ -11,11 +11,15 @@ namespace VisibleWealth
     {
         public static void Postfix()
         {
-            if (Find.CurrentMap != null && !WorldRendererUtility.WorldSelected)
+            if (Find.CurrentMap != null && WorldRendererUtility.DrawingMap)
             {
                 if (KeyBindingUtility.WealthBreakdown.JustPressed || (KeyBindingUtility.WealthBreakdownShift.JustPressed && KeyBindingUtility.IsShiftHeld()))
                 {
                     Dialog_WealthBreakdown.Open();
+                }
+                if (KeyBindingUtility.WealthOverlay.JustPressed)
+                {
+                    WealthOverlay.Visible = !WealthOverlay.Visible;
                 }
             }
         }

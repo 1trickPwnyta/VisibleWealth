@@ -31,7 +31,13 @@
 	<VisibleWealth_ClickToExpand>Click to expand.</VisibleWealth_ClickToExpand>
 	<VisibleWealth_ClickToCollapse>Collapse {0}</VisibleWealth_ClickToCollapse>
 	<VisibleWealth_CollapseAll>Collapse all</VisibleWealth_CollapseAll>
-	<VisibleWealth_PlaySettingsButton>Show button in play settings (bottom right corner)</VisibleWealth_PlaySettingsButton>
-	<VisibleWealth_MainButton>Show main button (bottom bar)</VisibleWealth_MainButton>
-	<VisibleWealth_OpenKeyBindings>Configure Wealth Breakdown shortcut key</VisibleWealth_OpenKeyBindings>
+	<VisibleWealth_PlaySettingsButton>Show wealth breakdown button in play settings (bottom right corner)</VisibleWealth_PlaySettingsButton>
+	<VisibleWealth_MainButton>Show wealth breakdown main button (bottom bar)</VisibleWealth_MainButton>
+	<VisibleWealth_OpenKeyBindings>Configure shortcut keys</VisibleWealth_OpenKeyBindings>
+	<VisibleWealth_WealthOverlay>Show wealth overlay toggle in play settings (bottom right corner)</VisibleWealth_WealthOverlay>
+	<VisibleWealth_WealthOverlayTip>Toggle the wealth overlay.\n\nThis shows where your wealth is concentrated and exposes the total wealth of nearby tiles.</VisibleWealth_WealthOverlayTip>
+	<VisibleWealth_WealthOverlayPause>Pause the game when the wealth overlay is toggled on (recommended)</VisibleWealth_WealthOverlayPause>
+	<VisibleWealth_WealthOverlayPauseTip>This is recommended because the wealth overlay does not recalculate in real time for performance reasons. Rather, it only calculates once upon being toggled on, and if the game is unpaused then pawns and things can move around and the overlay will immediately become inaccurate.</VisibleWealth_WealthOverlayPauseTip>
+	<VisibleWealth_WealthOverlayThreshold>Min $:</VisibleWealth_WealthOverlayThreshold>
+	<VisibleWealth_WealthOverlayDisabled>The wealth overlay must first be enabled in the mod settings for {0}.</VisibleWealth_WealthOverlayDisabled>
 </LanguageData>
