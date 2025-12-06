@@ -21,6 +21,8 @@ namespace VisibleWealth
         public readonly WealthNode parent;
         public readonly bool isMapRoot;
         public readonly HashSet<Def> usedDefsOnMap = new HashSet<Def>();
+        public Color chartColor;
+        public Color chartColorBackup;
 
         public static IEnumerable<WealthNode> MakeRootNodes(Map map)
         {
@@ -31,7 +33,6 @@ namespace VisibleWealth
                 new WealthNode_WealthCategory(null, map, 0, WealthCategory.Pawns, true),
                 new WealthNode_WealthCategory(null, map, 0, WealthCategory.PocketMaps)
             };
-            ColorRoots(roots);
             return roots;
         }
 
@@ -46,54 +47,6 @@ namespace VisibleWealth
             }
         }
 
-        public static void ColorRoots(IEnumerable<WealthNode> rootNodes)
-        {
-            List<WealthNode> nodes = rootNodes.Where(n => n.Visible).ToList();
-            for (int i = 0; i < nodes.Count; i++)
-            {
-                WealthNode node = nodes[i];
-                float hue, backupHue;
-                if (i == 0)
-                {
-                    hue = ColorUtility.GetSufficientlyDifferentHue(new float[0], 0f);
-                    backupHue = ColorUtility.GetSufficientlyDifferentHue(new[] { hue }, 0.05f);
-                }
-                else if (i < nodes.Count - 1)
-                {
-                    hue = ColorUtility.GetSufficientlyDifferentHue(new[]
-                    {
-                        nodes[i - 1].ChartColor.GetHue(),
-                        nodes[i - 1].ChartColorBackup.GetHue()
-                    }, 0.05f);
-                    backupHue = ColorUtility.GetSufficientlyDifferentHue(new[]
-                    {
-                        nodes[i - 1].ChartColor.GetHue(),
-                        nodes[i - 1].ChartColorBackup.GetHue(),
-                        hue
-                    }, 0.05f);
-                }
-                else
-                {
-                    hue = ColorUtility.GetSufficientlyDifferentHue(new[]
-                    {
-                        nodes[i - 1].ChartColor.GetHue(),
-                        nodes[i - 1].ChartColorBackup.GetHue(),
-                        nodes[0].ChartColor.GetHue(),
-                        nodes[0].ChartColorBackup.GetHue()
-                    }, 0.05f);
-                    backupHue = ColorUtility.GetSufficientlyDifferentHue(new[]
-                    {
-                        nodes[i - 1].ChartColor.GetHue(),
-                        nodes[i - 1].ChartColorBackup.GetHue(),
-                        nodes[0].ChartColor.GetHue(),
-                        nodes[0].ChartColorBackup.GetHue(),
-                        hue
-                    }, 0.05f);
-                }
-                node.SetChartColor(Color.HSVToRGB(hue, 0.3f + Rand.Value * 0.7f, 0.6f), Color.HSVToRGB(backupHue, 0.3f + Rand.Value * 0.7f, 0.6f));
-            }
-        }
-
         public WealthNode(WealthNode parent, Map map, int level, bool isMapRoot = false)
         {
             this.parent = parent;
@@ -101,71 +54,6 @@ namespace VisibleWealth
             this.level = level;
             this.isMapRoot = isMapRoot;
         }
-
-        private void SetChartColor(Color color, Color colorBackup)
-        {
-            ChartColor = color;
-            ChartColorBackup = colorBackup;
-
-            List<WealthNode> children = Children.Where(c => c.Visible).ToList();
-            for (int i = 0; i < children.Count; i++)
-            {
-                WealthNode child = children[i];
-                if (children.Count == 1)
-                {
-                    child.SetChartColor(ChartColorBackup, ChartColor);
-                }
-                else if (children.Count == 2)
-                {
-                    child.SetChartColor(i == 0 ? ChartColor : ChartColorBackup, i == 0 ? ChartColorBackup : ChartColor);
-                }
-                else if (i == 0 || i == children.Count - 1)
-                {
-                    child.SetChartColor(ChartColor, ChartColorBackup);
-                }
-                else
-                {
-                    float hue, backupHue;
-                    if (i < children.Count - 2)
-                    {
-                        hue = ColorUtility.GetSufficientlyDifferentHue(new[]
-                        {
-                            children[i - 1].ChartColor.GetHue(),
-                            children[i - 1].ChartColorBackup.GetHue()
-                        }, 0.05f);
-                        backupHue = ColorUtility.GetSufficientlyDifferentHue(new[]
-                        {
-                            children[i - 1].ChartColor.GetHue(),
-                            children[i - 1].ChartColorBackup.GetHue(),
-                            hue
-                        }, 0.05f);
-                    }
-                    else
-                    {
-                        hue = ColorUtility.GetSufficientlyDifferentHue(new[]
-                        {
-                            children[i - 1].ChartColor.GetHue(),
-                            children[i - 1].ChartColorBackup.GetHue(),
-                            ChartColor.GetHue(),
-                            ChartColorBackup.GetHue()
-                        }, 0.05f);
-                        backupHue = ColorUtility.GetSufficientlyDifferentHue(new[]
-                        {
-                            children[i - 1].ChartColor.GetHue(),
-                            children[i - 1].ChartColorBackup.GetHue(),
-                            ChartColor.GetHue(),
-                            ChartColorBackup.GetHue(),
-                            hue
-                        }, 0.05f);
-                    }
-                    child.SetChartColor(Color.HSVToRGB(hue, 0.3f + Rand.Value * 0.7f, 0.6f), Color.HSVToRGB(backupHue, 0.3f + Rand.Value * 0.7f, 0.6f));
-                }
-            }
-        }
-
-        public Color ChartColor { get; private set; }
-
-        public Color ChartColorBackup { get; private set; }
 
         public bool Open
         {

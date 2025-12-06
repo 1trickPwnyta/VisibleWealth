@@ -8,6 +8,7 @@ using Verse.Sound;
 
 namespace VisibleWealth
 {
+    [StaticConstructorOnStartup]
     public class ChartWorker_PieChart : ChartWorker
     {
         private class PieChart
@@ -29,6 +30,8 @@ namespace VisibleWealth
             public Vector2 lineEnd;
         }
 
+        private static readonly Texture2D RerollColorsIcon = ContentFinder<Texture2D>.Get("UI/Options/WealthBreakdown_RerollColors");
+        private static readonly Texture2D ZoomOutIcon = ContentFinder<Texture2D>.Get("UI/Options/WealthBreakdown_ZoomOut");
         private static readonly float radiusFactor = 0.4f;
         private static readonly float border = 1f;
         private static readonly float nestLevelThickness = 8f;
@@ -38,22 +41,43 @@ namespace VisibleWealth
         private static readonly IEnumerable<ChartOption> options = new ChartOption[]
         {
             new ChartOption_Enum<PieStyle>(() => VisibleWealthSettings.PieStyle, option => VisibleWealthSettings.PieStyle = option, "VisibleWealth_PieStyle".Translate(), option => option.GetLabel(), option => option.GetIcon()),
-            ChartOption.RerollColors, 
-            ChartOption.CollapseAll, 
+            new ChartOption_Button(() => SetNodeChartColors(zoomRoot != null ? zoomRoot.Children : Dialog_WealthBreakdown.Current.rootNodes), () => true, "VisibleWealth_RerollColors".Translate(), RerollColorsIcon), 
+            ChartOption.CollapseAll,
+            new ChartOption_Button(() =>
+            {
+                zoomRoot.Open = false;
+                zoomRoot = null;
+                SetNodeChartColors(Dialog_WealthBreakdown.Current.rootNodes);
+            }, () => zoomRoot != null, "VisibleWealth_ZoomOut".Translate(), ZoomOutIcon), 
             ChartOption.PercentOf,
             ChartOption.RaidPointMode
         };
+        private static readonly List<Color> colorOptions = Enumerable.Range(0, 32).SelectMany(i => Enumerable.Range(0, 3).Select(j => Color.HSVToRGB(i / 32f, 0.3f + j / 3f * 0.7f, 0.6f))).ToList();
 
         private static float iteratorFraction;
         private static WealthNode mouseOverNode;
         private static bool mouseOverLabel;
+        private static WealthNode zoomRoot;
 
         private Dictionary<long, PieChart> cache = new Dictionary<long, PieChart>();
 
         public override IEnumerable<ChartOption> Options => options;
 
+        public override IEnumerable<WealthNode> GetCollapsableRootNodes(IEnumerable<WealthNode> rootNodes) => zoomRoot?.Children ?? rootNodes;
+
+        public override void Initialize(IEnumerable<WealthNode> rootNodes)
+        {
+            SetNodeChartColors(rootNodes);
+        }
+
         public override void Draw(Rect outRect, Rect viewRect, ref float y, IEnumerable<WealthNode> rootNodes)
         {
+            if (zoomRoot?.Open == false)
+            {
+                zoomRoot = null;
+                SetNodeChartColors(rootNodes);
+            }
+
             long state = GetState(rootNodes);
             PieChart chart;
             if (!cache.ContainsKey(state))
@@ -61,6 +85,10 @@ namespace VisibleWealth
                 int size = (int)GetSize(outRect);
                 float radius = size * radiusFactor;
                 Texture2D tex = new Texture2D(size, size, TextureFormat.RGBA32, true);
+                if (zoomRoot != null)
+                {
+                    rootNodes = new[] { zoomRoot };
+                }
                 Pie<WealthNode> pie = new Pie<WealthNode>(Flatten(rootNodes));
                 chart = new PieChart()
                 {
@@ -122,7 +150,7 @@ namespace VisibleWealth
             {
                 Widgets.Label(data.textRect, data.node.GetLabel());
                 TooltipHandler.TipRegionByKey(data.textRect, data.node.IsLeafNode ? "VisibleWealth_ClickForInfo" : "VisibleWealth_ClickToExpand");
-                if (!Dialog_WealthBreakdown.Search.filter.Active)
+                if (data.node.MatchesSearch())
                 {
                     if (Mouse.IsOver(data.textRect))
                     {
@@ -145,7 +173,7 @@ namespace VisibleWealth
                         }
                         else if (!data.node.Open)
                         {
-                            data.node.Open = true;
+                            OpenNode(data.node);
                             SoundDefOf.TabOpen.PlayOneShot(null);
                         }
                     }
@@ -172,17 +200,17 @@ namespace VisibleWealth
 
         public override void OnMouseOver(Vector2 pos, Rect outRect, Rect viewRect, IEnumerable<WealthNode> rootNodes)
         {
-            if (!Dialog_WealthBreakdown.Search.filter.Active)
+            long state = GetState(rootNodes);
+            if (cache.ContainsKey(state))
             {
-                long state = GetState(rootNodes);
-                if (cache.ContainsKey(state))
+                PieChart chart = cache[state];
+                pos = UIToGraphCoord(pos, outRect, viewRect);
+                if (pos.magnitude < chart.radius)
                 {
-                    PieChart chart = cache[state];
-                    pos = UIToGraphCoord(pos, outRect, viewRect);
-                    if (pos.magnitude < chart.radius)
+                    float fraction = GetFraction(pos);
+                    WealthNode node = chart.pie.GetSlice(fraction);
+                    if (node.MatchesSearch())
                     {
-                        float fraction = GetFraction(pos);
-                        WealthNode node = chart.pie.GetSlice(fraction);
                         bool originalNode = true;
                         if (VisibleWealthSettings.PieStyle == PieStyle.Nested)
                         {
@@ -218,15 +246,15 @@ namespace VisibleWealth
                             SoundDefOf.Mouseover_Standard.PlayOneShot(null);
                         }
                     }
-                    else if (!mouseOverLabel)
+                    else
                     {
                         mouseOverNode = null;
                     }
                 }
-            }
-            else
-            {
-                mouseOverNode = null;
+                else if (!mouseOverLabel)
+                {
+                    mouseOverNode = null;
+                }
             }
         }
 
@@ -237,17 +265,17 @@ namespace VisibleWealth
 
         public override void OnClick(Vector2 pos, Rect outRect, Rect viewRect, IEnumerable<WealthNode> rootNodes)
         {
-            if (!Dialog_WealthBreakdown.Search.filter.Active)
+            long state = GetState(rootNodes);
+            if (cache.ContainsKey(state))
             {
-                long state = GetState(rootNodes);
-                if (cache.ContainsKey(state))
+                PieChart chart = cache[state];
+                pos = UIToGraphCoord(pos, outRect, viewRect);
+                if (pos.magnitude < chart.radius)
                 {
-                    PieChart chart = cache[state];
-                    pos = UIToGraphCoord(pos, outRect, viewRect);
-                    if (pos.magnitude < chart.radius)
+                    float fraction = GetFraction(pos);
+                    WealthNode node = chart.pie.GetSlice(fraction);
+                    if (node.MatchesSearch())
                     {
-                        float fraction = GetFraction(pos);
-                        WealthNode node = chart.pie.GetSlice(fraction);
                         WealthNode nestedNodeParent = node;
                         if (VisibleWealthSettings.PieStyle == PieStyle.Nested)
                         {
@@ -255,14 +283,21 @@ namespace VisibleWealth
                         }
                         if (nestedNodeParent == node)
                         {
-                            if (node.IsLeafNode)
+                            if (Event.current.button == 0)
                             {
-                                node.ShowInfoCard();
+                                if (node.IsLeafNode)
+                                {
+                                    node.ShowInfoCard();
+                                }
+                                else if (!node.Open)
+                                {
+                                    OpenNode(node);
+                                    SoundDefOf.TabOpen.PlayOneShot(null);
+                                }
                             }
-                            else if (!node.Open)
+                            else if (Event.current.button == 1)
                             {
-                                node.Open = true;
-                                SoundDefOf.TabOpen.PlayOneShot(null);
+                                Find.WindowStack.Add(new FloatMenu(GetRightClickOptions(node).ToList()));
                             }
                         }
                         else
@@ -275,10 +310,44 @@ namespace VisibleWealth
             }
         }
 
+        private IEnumerable<FloatMenuOption> GetRightClickOptions(WealthNode node)
+        {
+            TaggedString label = node.Text;
+            if (node.IsLeafNode)
+            {
+                yield return new FloatMenuOption("VisibleWealth_ShowInfoCard".Translate(label), node.ShowInfoCard);
+            }
+            else if (!node.Open)
+            {
+                yield return new FloatMenuOption("VisibleWealth_Expand".Translate(label), () => OpenNode(node));
+                yield return new FloatMenuOption("VisibleWealth_ZoomIn".Translate(label), () =>
+                {
+                    zoomRoot = node;
+                    OpenNode(node);
+                    SetNodeChartColors(zoomRoot.Children);
+                });
+            }
+            yield return new FloatMenuOption("VisibleWealth_SetColor".Translate(), () =>
+            {
+                Find.WindowStack.Add(new Dialog_ChooseColor(node.Text, node.chartColor, colorOptions, c => SetNodeChartColor(node, c, node.chartColorBackup)));
+            });
+        }
+
+        private void OpenNode(WealthNode node)
+        {
+            do
+            {
+                node.Open = true;
+                node = node.parent;
+            } while (node != null);
+            Dialog_WealthBreakdown.Search.Reset();
+        }
+
         public override void Cleanup()
         {
             cache.Clear();
             Resources.UnloadUnusedAssets();
+            zoomRoot = null;
         }
 
         private byte[] GetPixelData(int size, float radius, PieChart chart)
@@ -311,13 +380,9 @@ namespace VisibleWealth
                 {
                     float fraction = GetFraction(pos);
                     WealthNode node = chart.pie.GetSlice(fraction);
-                    if (Dialog_WealthBreakdown.Search.filter.Active)
+                    if (node.MatchesSearch())
                     {
-                        return node.MatchesSearch() ? node.ChartColor : gray;
-                    }
-                    else
-                    {
-                        if (VisibleWealthSettings.PieStyle == PieStyle.Nested && pos.magnitude > radius - node.level * nestLevelThickness)
+                        if (!Dialog_WealthBreakdown.Search.filter.Active && VisibleWealthSettings.PieStyle == PieStyle.Nested && pos.magnitude > radius - GetLevelRelative(node) * nestLevelThickness)
                         {
                             float rawLevel = GetNestLevel(radius, pos.magnitude);
                             int level = (int)rawLevel;
@@ -333,8 +398,12 @@ namespace VisibleWealth
                         }
                         else
                         {
-                            return mouseOverNode == node ? GetHighlightColor(node.ChartColor) : node.ChartColor;
+                            return mouseOverNode == node ? GetHighlightColor(node.chartColor) : node.chartColor;
                         }
+                    }
+                    else
+                    {
+                        return gray;
                     }
                 }
             }
@@ -356,7 +425,7 @@ namespace VisibleWealth
 
         private static WealthNode GetNestedNodeParent(WealthNode node, float radius, float magnitude)
         {
-            int levelDiff = node.level - (int)GetNestLevel(radius, magnitude);
+            int levelDiff = GetLevelRelative(node) - (int)GetNestLevel(radius, magnitude);
             for (int i = 0; i < levelDiff; i++)
             {
                 node = node.parent;
@@ -390,7 +459,7 @@ namespace VisibleWealth
 
         private static IEnumerable<Tuple<WealthNode, float>> LowestOpenNodes_Recursive(IEnumerable<WealthNode> nodes)
         {
-            float totalValue = Dialog_WealthBreakdown.Current.TotalWealth;
+            float totalValue = zoomRoot?.Value ?? Dialog_WealthBreakdown.Current.TotalWealth;
             foreach (WealthNode node in nodes)
             {
                 float nodeFraction = node.Value / totalValue;
@@ -412,7 +481,7 @@ namespace VisibleWealth
                             yield return child;
                         }
                     }
-                    else
+                    else if (node != zoomRoot)
                     {
                         yield return new Tuple<WealthNode, float>(node, iteratorFraction + nodeFraction / 2f);
                     }
@@ -518,7 +587,7 @@ namespace VisibleWealth
             float radius = chart.radius;
             if (VisibleWealthSettings.PieStyle == PieStyle.Nested)
             {
-                radius -= slice.Item2.level * nestLevelThickness;
+                radius -= GetLevelRelative(slice.Item2) * nestLevelThickness;
             }
             float arc = radius * radius - y * y;
             if (arc >= 0f)
@@ -623,10 +692,6 @@ namespace VisibleWealth
             {
                 CalculateSiblingEdgeFractionsRecursive(pie, slice.Item2, fractions, visitedNodes);
             }
-            foreach (int level in fractions.Keys)
-            {
-                Debug.Log(level + ": " + string.Join(", ", fractions[level]));
-            }
             return fractions;
         }
 
@@ -636,18 +701,19 @@ namespace VisibleWealth
             {
                 if (!pie.Contains(node))
                 {
-                    if (!fractions.ContainsKey(node.level))
+                    int relativeLevel = GetLevelRelative(node);
+                    if (!fractions.ContainsKey(relativeLevel))
                     {
-                        fractions[node.level] = new HashSet<float>() { 0f };
+                        fractions[relativeLevel] = new HashSet<float>() { 0f };
                     }
                     float effectiveFraction = GetEffectiveFraction(node, pie);
                     if (effectiveFraction < 1f)
                     {
-                        fractions[node.level].Add(effectiveFraction);
+                        fractions[relativeLevel].Add(effectiveFraction);
                     }
-                    fractions[node.level].Add(effectiveFraction - node.Value / pie.TotalValue);
+                    fractions[relativeLevel].Add(effectiveFraction - node.Value / pie.TotalValue);
                 }
-                if (node.parent != null)
+                if (node.parent != null && node.parent != zoomRoot)
                 {
                     CalculateSiblingEdgeFractionsRecursive(pie, node.parent, fractions, visitedNodes);
                 }
@@ -672,12 +738,149 @@ namespace VisibleWealth
             }
         }
 
+        private static int GetLevelRelative(WealthNode node)
+        {
+            int rootLevel = 0;
+            if (zoomRoot != null)
+            {
+                rootLevel = zoomRoot.level + 1;
+            }
+            return node.level - rootLevel;
+        }
+
+        private static void SetNodeChartColors(IEnumerable<WealthNode> rootNodes)
+        {
+            List<WealthNode> nodes = rootNodes.Where(n => n.Visible).ToList();
+            for (int i = 0; i < nodes.Count; i++)
+            {
+                WealthNode node = nodes[i];
+                float hue, backupHue;
+                if (i == 0)
+                {
+                    hue = Rand.Value;
+                    backupHue = ColorUtility.GetSufficientlyDifferentHue(new[] { hue }, 0.05f);
+                }
+                else if (i < nodes.Count - 1)
+                {
+                    hue = ColorUtility.GetSufficientlyDifferentHue(new[]
+                    {
+                        nodes[i - 1].chartColor.GetHue(),
+                        nodes[i - 1].chartColorBackup.GetHue()
+                    }, 0.05f);
+                    backupHue = ColorUtility.GetSufficientlyDifferentHue(new[]
+                    {
+                        nodes[i - 1].chartColor.GetHue(),
+                        nodes[i - 1].chartColorBackup.GetHue(),
+                        hue
+                    }, 0.05f);
+                }
+                else
+                {
+                    hue = ColorUtility.GetSufficientlyDifferentHue(new[]
+                    {
+                        nodes[i - 1].chartColor.GetHue(),
+                        nodes[i - 1].chartColorBackup.GetHue(),
+                        nodes[0].chartColor.GetHue(),
+                        nodes[0].chartColorBackup.GetHue()
+                    }, 0.05f);
+                    backupHue = ColorUtility.GetSufficientlyDifferentHue(new[]
+                    {
+                        nodes[i - 1].chartColor.GetHue(),
+                        nodes[i - 1].chartColorBackup.GetHue(),
+                        nodes[0].chartColor.GetHue(),
+                        nodes[0].chartColorBackup.GetHue(),
+                        hue
+                    }, 0.05f);
+                }
+                SetNodeChartColor(node, Color.HSVToRGB(hue, 0.3f + Rand.Value * 0.7f, 0.6f), Color.HSVToRGB(backupHue, 0.3f + Rand.Value * 0.7f, 0.6f), nodes.Count > 1);
+            }
+        }
+
+        private static void SetNodeChartColor(WealthNode node, Color color, Color colorBackup, bool allowFirstLastSame = true)
+        {
+            node.chartColor = color;
+            node.chartColorBackup = colorBackup;
+
+            List<WealthNode> children = node.Children.Where(c => c.Visible).ToList();
+            for (int i = 0; i < children.Count; i++)
+            {
+                WealthNode child = children[i];
+                if (children.Count == 1)
+                {
+                    SetNodeChartColor(child, node.chartColorBackup, node.chartColor, false);
+                }
+                else if (children.Count == 2)
+                {
+                    if (i == 0)
+                    {
+                        SetNodeChartColor(child, node.chartColor, node.chartColorBackup);
+                    }
+                    else
+                    {
+                        SetNodeChartColor(child, node.chartColorBackup, node.chartColor);
+                    }
+                }
+                else if (i == 0 || i == children.Count - 1)
+                {
+                    if (i == 0 || allowFirstLastSame)
+                    {
+                        SetNodeChartColor(child, node.chartColor, node.chartColorBackup);
+                    }
+                    else
+                    {
+                        SetNodeChartColor(child, node.chartColorBackup, node.chartColor);
+                    }
+                }
+                else
+                {
+                    float hue, backupHue;
+                    if (i < children.Count - 2)
+                    {
+                        hue = ColorUtility.GetSufficientlyDifferentHue(new[]
+                        {
+                            children[i - 1].chartColor.GetHue(),
+                            children[i - 1].chartColorBackup.GetHue()
+                        }, 0.05f);
+                        backupHue = ColorUtility.GetSufficientlyDifferentHue(new[]
+                        {
+                            children[i - 1].chartColor.GetHue(),
+                            children[i - 1].chartColorBackup.GetHue(),
+                            hue
+                        }, 0.05f);
+                    }
+                    else
+                    {
+                        hue = ColorUtility.GetSufficientlyDifferentHue(new[]
+                        {
+                            children[i - 1].chartColor.GetHue(),
+                            children[i - 1].chartColorBackup.GetHue(),
+                            node.chartColor.GetHue(),
+                            node.chartColorBackup.GetHue()
+                        }, 0.05f);
+                        backupHue = ColorUtility.GetSufficientlyDifferentHue(new[]
+                        {
+                            children[i - 1].chartColor.GetHue(),
+                            children[i - 1].chartColorBackup.GetHue(),
+                            node.chartColor.GetHue(),
+                            node.chartColorBackup.GetHue(),
+                            hue
+                        }, 0.05f);
+                    }
+                    SetNodeChartColor(child, Color.HSVToRGB(hue, 0.3f + Rand.Value * 0.7f, 0.6f), Color.HSVToRGB(backupHue, 0.3f + Rand.Value * 0.7f, 0.6f), children.Count > 1);
+                }
+            }
+        }
+
         private static long GetState(IEnumerable<WealthNode> nodes) => nodes.Sum(n => GetNodeState(n)) + Dialog_WealthBreakdown.Search.filter.Text.GetHashCode() + (int)VisibleWealthSettings.PieStyle * 3678 + (VisibleWealthSettings.RaidPointMode ? -2172368 : 123);
 
         private static long GetNodeState(WealthNode node)
         {
             int code = node.GetHashCode();
-            long state = code * 2950 * (node.Open ? 1 : -1) + code * 790372 * (node == mouseOverNode ? 1 : -1) + node.ChartColor.GetHashCode();
+            if (zoomRoot == node)
+            {
+                code *= -1101;
+            }
+            long state = code * 2950 * (node.Open ? 1 : -1) + code * 790372 * (node == mouseOverNode ? 1 : -1) + node.chartColor.GetHashCode();
             foreach (WealthNode child in node.Children)
             {
                 state += GetNodeState(child);

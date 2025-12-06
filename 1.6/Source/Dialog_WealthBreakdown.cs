@@ -54,6 +54,7 @@ namespace VisibleWealth
             map = Find.CurrentMap;
             map.wealthWatcher.ForceRecount();
             rootNodes = WealthNode.MakeRootNodes(map).ToList();
+            ChartWorker.InitializeAll(rootNodes);
 
             Search.Reset();
         }

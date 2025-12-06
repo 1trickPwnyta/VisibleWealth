@@ -11,20 +11,17 @@ namespace VisibleWealth
     [StaticConstructorOnStartup]
     public abstract class ChartOption
     {
-        private static readonly Texture2D RerollColorsIcon = ContentFinder<Texture2D>.Get("UI/Options/WealthBreakdown_RerollColors");
         private static readonly Texture2D RaidPointModeIcon = ContentFinder<Texture2D>.Get("UI/Options/WealthBreakdown_RaidPointMode");
 
         public abstract void DoOption(Rect rect);
 
         public static readonly ChartOption CollapseAll = new ChartOption_Button(() =>
         {
-            foreach (WealthNode node in WealthNode.GetAllNodes(Dialog_WealthBreakdown.Current.rootNodes))
+            foreach (WealthNode node in VisibleWealthSettings.ChartType.Worker.GetCollapsableRootNodes(Dialog_WealthBreakdown.Current.rootNodes))
             {
                 node.Open = false;
             }
-        }, () => WealthNode.GetAllNodes(Dialog_WealthBreakdown.Current.rootNodes).Any(n => n.Open), "VisibleWealth_CollapseAll".Translate(), TexButton.Reveal);
-
-        public static readonly ChartOption RerollColors = new ChartOption_Button(() => WealthNode.ColorRoots(Dialog_WealthBreakdown.Current.rootNodes), () => true, "VisibleWealth_RerollColors".Translate(), RerollColorsIcon);
+        }, () => VisibleWealthSettings.ChartType.Worker.GetCollapsableRootNodes(Dialog_WealthBreakdown.Current.rootNodes).Any(n => n.Open), "VisibleWealth_CollapseAll".Translate(), TexButton.Reveal);
 
         public static readonly ChartOption PercentOf = new ChartOption_Enum<PercentOf>(() => VisibleWealthSettings.PercentOf, option => VisibleWealthSettings.PercentOf = option, null, option => option.GetLabel(), option => option.GetIcon());
 

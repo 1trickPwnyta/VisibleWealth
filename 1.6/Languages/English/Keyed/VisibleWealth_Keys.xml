@@ -39,5 +39,9 @@
 	<VisibleWealth_WealthOverlayPause>Pause the game when the wealth overlay is toggled on (recommended)</VisibleWealth_WealthOverlayPause>
 	<VisibleWealth_WealthOverlayPauseTip>This is recommended because the wealth overlay does not recalculate in real time for performance reasons. Rather, it only calculates once upon being toggled on, and if the game is unpaused then pawns and things can move around and the overlay will immediately become inaccurate.</VisibleWealth_WealthOverlayPauseTip>
 	<VisibleWealth_WealthOverlayThreshold>Min $:</VisibleWealth_WealthOverlayThreshold>
-	<VisibleWealth_WealthOverlayDisabled>The wealth overlay must first be enabled in the mod settings for {0}.</VisibleWealth_WealthOverlayDisabled>
+	<VisibleWealth_ShowInfoCard>View {0}</VisibleWealth_ShowInfoCard>
+	<VisibleWealth_Expand>Expand {0}</VisibleWealth_Expand>
+	<VisibleWealth_ZoomIn>Zoom in on {0}</VisibleWealth_ZoomIn>
+	<VisibleWealth_ZoomOut>Zoom out</VisibleWealth_ZoomOut>
+	<VisibleWealth_SetColor>Set color...</VisibleWealth_SetColor>
 </LanguageData>
