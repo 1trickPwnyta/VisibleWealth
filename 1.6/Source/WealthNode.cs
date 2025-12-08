@@ -113,15 +113,11 @@ namespace VisibleWealth
 
         public bool MatchesSearch() => Visible && Dialog_WealthBreakdown.Search.filter.Matches(Text);
 
-        public bool ThisOrAnyChildMatchesSearch()
+        public bool DescendantMatchesSearch()
         {
-            if (MatchesSearch())
-            {
-                return true;
-            }
             foreach (WealthNode node in Children)
             {
-                if (node.ThisOrAnyChildMatchesSearch())
+                if (node.MatchesSearch() || node.DescendantMatchesSearch())
                 {
                     return true;
                 }
@@ -131,7 +127,7 @@ namespace VisibleWealth
 
         public abstract string Text { get; }
 
-        public TaggedString GetLabel() => Text + " " + ("$" + Value.ToString("F0")).Colorize(ColoredText.CurrencyColor) + " " + VisibleWealthSettings.PercentOf.Text(this).Colorize(ColoredText.SubtleGrayColor);
+        public TaggedString GetLabel() => Text + " " + Value.ToStringMoney() + " " + VisibleWealthSettings.PercentOf.Text(this).Colorize(ColoredText.SubtleGrayColor);
 
         public abstract IEnumerable<WealthNode> Children { get; }
 
@@ -161,7 +157,7 @@ namespace VisibleWealth
 
         public void Draw(float width, ref float y, bool nested = true)
         {
-            if (ThisOrAnyChildMatchesSearch())
+            if (MatchesSearch() || DescendantMatchesSearch())
             {
                 float nestedIndent = nested ? level * Indent : 0f;
                 Rect rect = new Rect(nestedIndent, y, width - nestedIndent, drawHeight);

@@ -2,7 +2,7 @@
 <LanguageData>
 	<VisibleWealth_WealthBreakdown>Wealth breakdown</VisibleWealth_WealthBreakdown>
 	<VisibleWealth_Calculating>Calculating</VisibleWealth_Calculating>
-	<VisibleWealth_TotalWealth>Total wealth: ${0}</VisibleWealth_TotalWealth>
+	<VisibleWealth_TotalWealth>Total wealth: {0}</VisibleWealth_TotalWealth>
 	<VisibleWealth_ListStyle>List style</VisibleWealth_ListStyle>
 	<VisibleWealth_PieStyle>Pie chart style</VisibleWealth_PieStyle>
 	<VisibleWealth_Flat>Flat</VisibleWealth_Flat>
@@ -44,4 +44,9 @@
 	<VisibleWealth_ZoomIn>Zoom in on {0}</VisibleWealth_ZoomIn>
 	<VisibleWealth_ZoomOut>Zoom out</VisibleWealth_ZoomOut>
 	<VisibleWealth_SetColor>Set color...</VisibleWealth_SetColor>
+	<VisibleWealth_WealthSummary>Colony wealth (this map): {0}\nItems wealth: {1}\nBuildings wealth: {2}\nPawns wealth: {3}\n\nClick for full wealth breakdown.</VisibleWealth_WealthSummary>
+	<VisibleWealth_WealthGlobalControl>Show wealth total in global controls (right side)</VisibleWealth_WealthGlobalControl>
+	<VisibleWealth_WealthGlobalControlColor>  Wealth color:  </VisibleWealth_WealthGlobalControlColor>
+	<VisibleWealth_WealthGlobalControlColorTitle>Wealth color</VisibleWealth_WealthGlobalControlColorTitle>
+	<VisibleWealth_WealthGlobalControlCacheTicks>  Recalculate wealth shown after X ticks: </VisibleWealth_WealthGlobalControlCacheTicks>
 </LanguageData>

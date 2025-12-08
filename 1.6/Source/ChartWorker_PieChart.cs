@@ -43,12 +43,6 @@ namespace VisibleWealth
             new ChartOption_Enum<PieStyle>(() => VisibleWealthSettings.PieStyle, option => VisibleWealthSettings.PieStyle = option, "VisibleWealth_PieStyle".Translate(), option => option.GetLabel(), option => option.GetIcon()),
             new ChartOption_Button(() => SetNodeChartColors(zoomRoot != null ? zoomRoot.Children : Dialog_WealthBreakdown.Current.rootNodes), () => true, "VisibleWealth_RerollColors".Translate(), RerollColorsIcon), 
             ChartOption.CollapseAll,
-            new ChartOption_Button(() =>
-            {
-                zoomRoot.Open = false;
-                zoomRoot = null;
-                SetNodeChartColors(Dialog_WealthBreakdown.Current.rootNodes);
-            }, () => zoomRoot != null, "VisibleWealth_ZoomOut".Translate(), ZoomOutIcon), 
             ChartOption.PercentOf,
             ChartOption.RaidPointMode
         };
@@ -110,6 +104,19 @@ namespace VisibleWealth
             }
 
             Widgets.DrawTextureFitted(viewRect, chart.tex, 1f);
+            if (zoomRoot != null)
+            {
+                Rect topRect = viewRect.TopPartPixels(24f);
+                TaggedString text = zoomRoot.GetLabel();
+                using (new TextBlock(TextAnchor.MiddleCenter)) Widgets.Label(topRect, text);
+                if (Widgets.ButtonImage(topRect.RightPartPixels((topRect.width - Text.CalcSize(text).x) / 2f - 10f).LeftPartPixels(topRect.height), ZoomOutIcon, tooltip: "VisibleWealth_ZoomOut".Translate()))
+                {
+                    zoomRoot.Open = false;
+                    zoomRoot = null;
+                    SetNodeChartColors(Dialog_WealthBreakdown.Current.rootNodes);
+                    SoundDefOf.Click.PlayOneShot(null);
+                }
+            }
             DrawLabels(chart, outRect, viewRect);
             DrawButtons(chart, outRect, viewRect);
 
@@ -289,7 +296,7 @@ namespace VisibleWealth
                                 {
                                     node.ShowInfoCard();
                                 }
-                                else if (!node.Open)
+                                else
                                 {
                                     OpenNode(node);
                                     SoundDefOf.TabOpen.PlayOneShot(null);
@@ -317,7 +324,7 @@ namespace VisibleWealth
             {
                 yield return new FloatMenuOption("VisibleWealth_ShowInfoCard".Translate(label), node.ShowInfoCard);
             }
-            else if (!node.Open)
+            else
             {
                 yield return new FloatMenuOption("VisibleWealth_Expand".Translate(label), () => OpenNode(node));
                 yield return new FloatMenuOption("VisibleWealth_ZoomIn".Translate(label), () =>
@@ -437,7 +444,7 @@ namespace VisibleWealth
         {
             foreach (WealthNode node in nodes)
             {
-                if ((node.Open && !Dialog_WealthBreakdown.Search.filter.Active) || (Dialog_WealthBreakdown.Search.filter.Active && !node.MatchesSearch() && node.ThisOrAnyChildMatchesSearch()))
+                if ((node.Open && !Dialog_WealthBreakdown.Search.filter.Active) || (Dialog_WealthBreakdown.Search.filter.Active && node.DescendantMatchesSearch()))
                 {
                     foreach (WealthNode child in Flatten(node.Children))
                     {

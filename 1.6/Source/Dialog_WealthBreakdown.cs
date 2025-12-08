@@ -81,7 +81,7 @@ namespace VisibleWealth
                 Text.Font = GameFont.Small;
 
                 Rect totalWealthRect = new Rect(inRect.x, inRect.y + 45f, inRect.width, 30f);
-                Widgets.Label(totalWealthRect, "VisibleWealth_TotalWealth".Translate(TotalWealth.ToString("F0")));
+                Widgets.Label(totalWealthRect, "VisibleWealth_TotalWealth".Translate(TotalWealth.ToStringMoney()));
 
                 Rect searchRect = new Rect(inRect.xMax - QuickSearchSize.x, inRect.y + 45f, QuickSearchSize.x, QuickSearchSize.y);
                 Search.OnGUI(searchRect);
