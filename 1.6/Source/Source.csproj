@@ -80,6 +80,7 @@
     <Compile Include="Patch_MapInterface.cs" />
     <Compile Include="Patch_PlaySettings.cs" />
     <Compile Include="Patch_UIRoot_Play.cs" />
+    <Compile Include="Patch_WealthWatcher.cs" />
     <Compile Include="PawnCategory.cs" />
     <Compile Include="PercentOf.cs" />
     <Compile Include="Pie.cs" />
@@ -92,6 +93,7 @@
     <Compile Include="VisibleWealthMod.cs" />
     <Compile Include="VisibleWealthSettings.cs" />
     <Compile Include="WealthCategory.cs" />
+    <Compile Include="WealthGlobalControl.cs" />
     <Compile Include="WealthNode.cs" />
     <Compile Include="WealthNode_Building.cs" />
     <Compile Include="WealthNode_BuildingCategory.cs" />

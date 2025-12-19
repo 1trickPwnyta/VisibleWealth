@@ -9,6 +9,7 @@ namespace VisibleWealth
     {
         public static void Postfix(Map __instance)
         {
+            WealthGlobalControl.RegisterMap(__instance);
             WealthOverlay.RegisterMap(__instance);
         }
     }
